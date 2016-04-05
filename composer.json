@@ -1,0 +1,21 @@
+{
+  "name": "emedia/api",
+  "description": "API and custom response helpers for Laravel 5",
+  "type": "package",
+  "require": {
+    "php": ">=5.5.9",
+    "illuminate/support": "5.2.*"
+  },
+  "license": "private",
+  "authors": [
+    {
+      "name": "Shane Perera",
+      "email": "shane@shaneperera.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "EMedia\\Api\\": "src/"
+    }
+  }
+}
