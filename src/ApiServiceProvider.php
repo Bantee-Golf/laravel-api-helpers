@@ -3,7 +3,7 @@ namespace EMedia\Api;
 
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
-use App\Http\Responses\Response as BaseResponse;
+use EMedia\Api\Http\Responses\Response as BaseResponse;
 
 class ApiServiceProvider extends ServiceProvider
 {
