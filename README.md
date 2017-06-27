@@ -10,7 +10,7 @@ Add the repository to `composer.json`
 "repositories": [
 	{
 	    "type":"vcs",
-	    "url":"git@bitbucket.org:elegantmedia/api-laravel.git"
+	    "url":"git@bitbucket.org:elegantmedia/laravel-api-helpers.git"
 	}
 ]
 ```
