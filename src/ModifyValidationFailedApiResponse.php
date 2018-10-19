@@ -1,9 +1,10 @@
 <?php
 namespace EMedia\Api;
 
+use EMedia\Api\Http\Responses\Response;
 use Illuminate\Http\Request;
 
-trait ModifyValidationFailedAPIResponse
+trait ModifyValidationFailedApiResponse
 {
 	/**
 	 * Create the response for when a request fails validation.
@@ -17,7 +18,7 @@ trait ModifyValidationFailedAPIResponse
 		if (($request->ajax() && ! $request->pjax()) || $request->wantsJson()) {
 			$errors = array_flatten($errors);
 			$errors = implode(' ', $errors);
-			return response()->apiError($errors, 422);	// HTTP_UNPROCESSABLE_ENTITY
+			return response()->apiError($errors, Response::HTTP_UNPROCESSABLE_ENTITY);
 		}
 
 		return redirect()->to($this->getRedirectUrl())

@@ -41,7 +41,7 @@ class ApiServiceProvider extends ServiceProvider
 		//
 
 		// unauthorized
-		Response::macro('apiUnauthorized', function ($message = 'Authentication failed. Try to login again.') {
+		Response::macro('apiErrorUnauthorized', function ($message = 'Authentication failed. Try to login again.') {
 			return Response::json([
 				'message' => $message,
 				'result'  => false,
@@ -49,7 +49,7 @@ class ApiServiceProvider extends ServiceProvider
 		});
 
 		// Generic API authorization error
-		Response::macro('apiAccessDenied', function ($message = 'Access denied.') {
+		Response::macro('apiErrorAccessDenied', function ($message = 'Access denied.') {
 			return Response::json([
 				'message' => $message,
 				'result'  => false,

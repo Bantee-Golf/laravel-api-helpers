@@ -3,19 +3,32 @@
   "description": "API and custom response helpers for Laravel 5",
   "type": "package",
   "require": {
-    "php": ">=5.5.9",
-    "illuminate/support": "5.2.*|5.3.*|5.4.*"
+    "php": "^7.1",
+    "illuminate/support": "^5.7",
+    "illuminate/http": "^5.7"
   },
   "license": "private",
   "authors": [
     {
       "name": "Shane Perera",
-      "email": "shane@shaneperera.com"
+      "email": "shane@elegantmedia.com.au"
     }
   ],
   "autoload": {
     "psr-4": {
       "EMedia\\Api\\": "src/"
+    },
+    "files": [
+      "IDEAutoComplete.php"
+    ]
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "EMedia\\Api\\ApiServiceProvider"
+      ]
     }
-  }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }

@@ -19,10 +19,7 @@ Add the repository to `composer.json`
 composer require emedia/api
 ```
 
-Add the service provider to `app.php`
-```
-EMedia\Api\ApiServiceProvider::class,
-```
+The package will be auto-discovered in L5.7.
 
 ## Usage
 
