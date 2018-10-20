@@ -19,7 +19,7 @@ Add the repository to `composer.json`
 composer require emedia/api
 ```
 
-The package will be auto-discovered in L5.7.
+The package will be auto-discovered in Laravel 5.7.
 
 ## Usage
 
@@ -31,7 +31,7 @@ return response()->apiSuccess($transaction, $optionalMessage);
 This will return a JSON response as,
 ```
 {
-	data: {transactionObject or Array},
+	payload: {transactionObject or Array},
 	message: '',
 	result: true
 }
@@ -48,10 +48,8 @@ return response()->apiSuccessPaginated($users, $optionalMessage);
 Returns
 ```
 {
-	...
-	paginated data
-	...
 	message: 'Optional message',
+	payload: { paginated data }
 	result: true
 }
 ```
@@ -80,7 +78,7 @@ Returns (Unprocessable Entity - 422 by default)
 ```
 {
 	message: 'Optional message',
-	data: {object or array},
+	payload: {object or array},
 	result: false
 }
 ```

@@ -1,28 +1,37 @@
 <?php
 namespace EMedia\Api;
 
-use EMedia\Api\Http\Responses\Response;
-use Illuminate\Http\Request;
-
 trait ModifyValidationFailedApiResponse
 {
+
 	/**
-	 * Create the response for when a request fails validation.
+	 * Validate the given request with the given rules.
 	 *
 	 * @param  \Illuminate\Http\Request  $request
-	 * @param  array  $errors
-	 * @return \Illuminate\Http\Response
+	 * @param  array  $rules
+	 * @param  array  $messages
+	 * @param  array  $customAttributes
+	 * @return array
+	 *
+	 * @throws \Illuminate\Validation\ValidationException
 	 */
-	protected function buildFailedValidationResponse(Request $request, array $errors)
+	public function validate(\Illuminate\Http\Request $request, array $rules,
+		array $messages = [], array $customAttributes = [])
 	{
-		if (($request->ajax() && ! $request->pjax()) || $request->wantsJson()) {
-			$errors = array_flatten($errors);
-			$errors = implode(' ', $errors);
-			return response()->apiError($errors, Response::HTTP_UNPROCESSABLE_ENTITY);
-		}
+		try {
+			return parent::validate($request, $rules, $messages, $customAttributes);
+		} catch (\Illuminate\Validation\ValidationException $ex) {
+			if ($request->expectsJson() && !$request->pjax()) {
+				$errorMessages = array_flatten($ex->errors());
+				$mergedErrorMessages = implode(' ', $errorMessages);
+				$data = [
+					'errors' => $ex->errors(),
+				];
+				throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->apiError($mergedErrorMessages, $data, \Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY));
+			}
 
-		return redirect()->to($this->getRedirectUrl())
-						 ->withInput($request->input())
-						 ->withErrors($errors, $this->errorBag());
+			throw $ex;
+		}
 	}
+
 }

@@ -22,18 +22,20 @@ class ApiServiceProvider extends ServiceProvider
 	protected function registerCustomResponses()
 	{
 		// success
-		Response::macro('apiSuccess', function ($data = null, $message = '') {
+		Response::macro('apiSuccess', function ($payload = null, $message = '') {
 			return Response::json([
-				'data'		=> $data,
+				'payload'	=> $payload,
 				'message' 	=> $message,
 				'result' 	=> true,
 			]);
 		});
 
-		Response::macro('apiSuccessPaginated', function ($data = null, $message = '') {
-			$data['message'] = $message;
-			$data['result']  = true;
-			return Response::json($data);
+		Response::macro('apiSuccessPaginated', function ($payload = null, $message = '') {
+			return Response::json([
+				'payload' => $payload,
+				'message' => $message,
+				'result'  => true,
+			]);
 		});
 
 		//
@@ -44,6 +46,7 @@ class ApiServiceProvider extends ServiceProvider
 		Response::macro('apiErrorUnauthorized', function ($message = 'Authentication failed. Try to login again.') {
 			return Response::json([
 				'message' => $message,
+				'payload' => null,
 				'result'  => false,
 			], BaseResponse::HTTP_UNAUTHORIZED); // 401 Error
 		});
@@ -52,6 +55,7 @@ class ApiServiceProvider extends ServiceProvider
 		Response::macro('apiErrorAccessDenied', function ($message = 'Access denied.') {
 			return Response::json([
 				'message' => $message,
+				'payload' => null,
 				'result'  => false,
 			], BaseResponse::HTTP_FORBIDDEN); // 403 Error
 		});
@@ -59,12 +63,12 @@ class ApiServiceProvider extends ServiceProvider
 		// Generic error
 		Response::macro('apiError',
 			function ($message = 'Unable to process request. Please try again later.',
-				$data = null,
+				$payload = null,
 				$statusCode = BaseResponse::HTTP_UNPROCESSABLE_ENTITY) {
 
 				return Response::json([
 					'message' => $message,
-					'data' => $data,
+					'payload' => $payload,
 					'result'  => false,
 				], $statusCode);
 
