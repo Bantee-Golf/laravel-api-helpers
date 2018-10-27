@@ -1,6 +1,7 @@
 <?php
 namespace EMedia\Api;
 
+use EMedia\Api\Console\Commands\GenerateDocsCommand;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use EMedia\Api\Http\Responses\Response as BaseResponse;
@@ -15,6 +16,12 @@ class ApiServiceProvider extends ServiceProvider
 	 */
 	public function register()
 	{
+		if (!$this->app->environment('production')) {
+			$this->app->singleton('emedia.api.builder', \EMedia\Api\Docs\DocBuilder::class);
+
+			$this->commands(GenerateDocsCommand::class);
+		}
+
 		$this->registerCustomResponses();
 	}
 

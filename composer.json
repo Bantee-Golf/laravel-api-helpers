@@ -19,7 +19,8 @@
       "EMedia\\Api\\": "src/"
     },
     "files": [
-      "IDEAutoComplete.php"
+      "IDEAutoComplete.php",
+      "src/helpers.php"
     ]
   },
   "extra": {
