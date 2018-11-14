@@ -2,6 +2,7 @@
 namespace EMedia\Api;
 
 use EMedia\Api\Console\Commands\GenerateDocsCommand;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use EMedia\Api\Http\Responses\Response as BaseResponse;
@@ -37,9 +38,13 @@ class ApiServiceProvider extends ServiceProvider
 			]);
 		});
 
-		Response::macro('apiSuccessPaginated', function ($payload = null, $message = '') {
+		Response::macro('apiSuccessPaginated', function (Paginator $paginator, $message = '') {
+			$paginatorArray = $paginator->toArray();
+			if (isset($paginatorArray['data'])) unset($paginatorArray['data']);
+
 			return Response::json([
-				'payload' => $payload,
+				'payload' => $paginator->items(),
+				'paginator' => $paginatorArray,
 				'message' => $message,
 				'result'  => true,
 			]);

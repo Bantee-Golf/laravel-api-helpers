@@ -7,7 +7,7 @@ use Illuminate\Http\JsonResponse;
 
 /**
  * @method JsonResponse apiSuccess($payload = null, $message = '') Send an API success response.
- * @method JsonResponse apiSuccessPaginated(Paginator $payload, $message) Send a paginated response.
+ * @method JsonResponse apiSuccessPaginated(Paginator $paginator, $message = '') Send a paginated response.
  *
  * @method JsonResponse apiErrorUnauthorized($message = null) Send 401 response.
  * @method JsonResponse apiErrorAccessDenied($message = null) Send 403 response.

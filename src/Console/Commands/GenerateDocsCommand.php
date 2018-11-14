@@ -120,7 +120,8 @@ class GenerateDocsCommand extends Command
 		try {
 			$this->hitRoutesAndLoadDocs();
 			$this->createDocSourceFiles();
-			$this->createSwaggerJson();
+			$this->createSwaggerJson('api');
+			$this->createSwaggerJson('postman');
 
 			$this->info('');
 			$this->info('To complete, run `apidoc -i resources/docs -o public_html/docs/api`');
@@ -210,20 +211,40 @@ class GenerateDocsCommand extends Command
 	 *
 	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
 	 */
-	protected function createSwaggerJson()
+	protected function createSwaggerJson($type = 'api')
 	{
+		if (!in_array($type, ['api', 'postman'])) {
+			throw new \InvalidArgumentException("The given type $type is an invalid argument");
+		}
+
+		if ($type === 'postman') {
+			$fileName = 'postman_collection.json';
+		} else {
+			$fileName = 'swagger.json';
+		}
+
 		$items = $this->docBuilder->getApiCalls();
 
 		$docsFolder = public_path('docs');
 		DirManager::makeDirectoryIfNotExists($docsFolder);
 
-		$outputPath = $docsFolder . DIRECTORY_SEPARATOR . 'swagger.json';
+		$outputPath = $docsFolder . DIRECTORY_SEPARATOR . $fileName;
 		$environmentFilePath = $docsFolder . DIRECTORY_SEPARATOR . 'postman_environment.json';
 
 		$urlParts = parse_url(config('app.url'));
 
+		// TODO: don't hardcode the version
+		$basePath = '/api/v1';
+
 		// Structure
 		// https://swagger.io/docs/specification/2-0/basic-structure/
+
+		if ($type === 'postman') {
+			$host = '{{domain}}';
+		} else {
+			$host = $urlParts['host'];
+		}
+
 		$schema = [
 			'swagger' => '2.0',
 			'info' => [
@@ -231,21 +252,68 @@ class GenerateDocsCommand extends Command
 				// 'description' => 'The description',
 				'version' => '1.0.0',
 			],
-			'host' => $urlParts['host'],
+			'host' => $host,
 			'schemes' => [
-				$urlParts['scheme'],
+				// $urlParts['scheme'],
+				'http', 'https',
 			],
-			'produces' => [
-				'application/json',
-			],
-			'basePath' => "/",
+			'basePath' => $basePath,
 			'paths' => [],
+			'securityDefinitions' => [
+				'apiKey' => [
+					'type' => 'apiKey',
+					'name' => 'x-api-key',
+					'in' => 'header',
+				],
+				'accessToken' => [
+					'type' => 'apiKey',
+					'name' => 'x-access-token',
+					'in' => 'header',
+					'description' => 'Unique user authentication token',
+				],
+			],
+			'definitions' => [
+				'ApiErrorUnauthorized' => [
+					'type' => 'object',
+					'properties' => [
+						'message' => [ 'type' => 'string' ],
+						'result'  => [ 'type' => 'boolean', 'default' => true ],
+						'payload' => [ 'type' => 'object' ]
+					]
+				],
+				'ApiErrorAccessDenied' => [
+					'type' => 'object',
+					'properties' => [
+						'message' => [ 'type' => 'string' ],
+						'result'  => [ 'type' => 'boolean', 'default' => true ],
+						'payload' => [ 'type' => 'object' ]
+					]
+				],
+				'ApiError' => [
+					'type' => 'object',
+					'properties' => [
+						'message' => [ 'type' => 'string' ],
+						'result'  => [ 'type' => 'boolean', 'default' => true ],
+						'payload' => [ 'type' => 'object' ]
+					]
+				],
+			],
 		];
 
+		// Postman environment
 		$environment = [
 			'name' => config('app.name') . ' Environment',
 			'_postman_variable_scope' => 'environment',
 			'values' => [],
+		];
+
+		// set the domain variable
+		$environment['values'][] = [
+			'key' => 'domain',
+			'value' => $urlParts['host'],
+			'description' => 'Domain host',
+			'type' => 'string',
+			'enabled' => true,
 		];
 
 		foreach ($items as $item) {
@@ -254,12 +322,16 @@ class GenerateDocsCommand extends Command
 			$route = $item->getRoute();
 			if (empty($route)) continue;
 
+			// method can be get/post/put/delete/head
+			$method = strtolower($item->getMethod());
+
 			$parameters = [];
 
 			// set parameters
 			/** @var Param $param */
 			$params = $item->getParams();
 			$headers = $item->getHeaders();
+
 			$allParams = (new Collection())->merge($headers)->merge($params);
 
 			// check for API use calls and merge the headers
@@ -271,7 +343,28 @@ class GenerateDocsCommand extends Command
 				}
 			}
 
+			// split the security tokens
+			$securityDefinitions = [];
+			$filteredParams = new Collection();
 			foreach ($allParams as $param) {
+				if ($param->getLocation() === Param::LOCATION_HEADER) {
+					$fieldName = strtolower($param->getName());
+					if (in_array($fieldName, ['x-api-key', 'x-access-token'])) {
+						if ($fieldName === 'x-api-key') {
+							$securityDefinitions[] = ['apiKey' => []];
+							if ($type === 'api') continue;
+						}
+						if ($fieldName === 'x-access-token') {
+							$securityDefinitions[] = ['accessToken' => []];
+							if ($type === 'api') continue;
+						}
+					}
+				}
+
+				$filteredParams->push($param);
+			}
+
+			foreach ($filteredParams as $param) {
 				$dataType = $param->getDataType();
 
 				// if this is an array, skip it
@@ -304,18 +397,20 @@ class GenerateDocsCommand extends Command
 					continue;
 				}
 
+				$location = $param->getLocation();
+				if ($location === null) {
+					$location = $method === 'get' ? Param::LOCATION_PATH : Param::LOCATION_FORM;
+				}
+
 				$paramData = [
 					'name'        => $name,
-					'in'          => $param->getLocation(),
+					'in'          => $location,
 					'required'    => $param->getRequired(),
 					'description' => $param->getDescription(),
-					'type'        => $dataType,
+					'type'        => strtolower($dataType),
 					// 'schema'      => [],
 				];
-//				if (!empty($default = $param->getDefaultValue())) {
-//					$paramData['schema']['default'] = $default;
-//					$paramData['schema']['type'] = strtolower($param->getDataType());
-//				}
+
 				$parameters[] = $paramData;
 
 				$existingParams = array_filter($environment['values'], function ($value) use ($name) {
@@ -333,33 +428,50 @@ class GenerateDocsCommand extends Command
 				}
 			}
 
-//			$method = [
-//				strtolower($item->getMethod()) => [
-//					'summary' => $item->getName(),
-//					// 'consumes' => ['application/x-www-form-urlencoded'],
-//					'description' => $item->getDescription(),
-//					'parameters' => $parameters,
-//				]
-//			];
-
-			$schema['paths'][$route][strtolower($item->getMethod())] = [
+			$pathSuffix = str_replace(ltrim($basePath, '/'), '', $route);
+			$schema['paths'][$pathSuffix][$method] = [
+				'tags' => [
+					$item->getGroup(),
+				],
 				'summary' => $item->getName(),
 				'consumes' => ['application/x-www-form-urlencoded'],
+				'produces' => ['application/json'],
 				'description' => $item->getDescription(),
 				'parameters' => $parameters,
-//					'responses' => [
-//						'200' => [
-//							'description' => $item->getSuccessResponse(),
-//						]
-//					]
+				'security' => $securityDefinitions,
+				'responses' => [
+//					'200' => [
+//
+//					],
+					'401' => [
+						'schema' => [
+							'$ref' => '#/definitions/ApiErrorUnauthorized'
+						],
+						'description' => 'Authentication failed'
+					],
+					'403' => [
+						'schema' => [
+							'$ref' => '#/definitions/ApiErrorAccessDenied'
+						],
+						'description' => 'Access denied'
+					],
+					'422' => [
+						'schema' => [
+							'$ref' => '#/definitions/ApiError'
+						],
+						'description' => 'Generic API error. Check `message` for more information.'
+					],
+				],
 			];
 		}
 
 		file_put_contents($outputPath, json_encode($schema, JSON_PRETTY_PRINT));
-		$this->info("Swagger 2.0 File - " . str_replace(base_path(), '', $outputPath));
+		$this->info("Generated File - " . str_replace(base_path(), '', $outputPath));
 
-		file_put_contents($environmentFilePath, json_encode($environment, JSON_PRETTY_PRINT));
-		$this->info("Postman Environment File - " . str_replace(base_path(), '', $environmentFilePath));
+		if ($type === 'postman') {
+			file_put_contents($environmentFilePath, json_encode($environment, JSON_PRETTY_PRINT));
+			$this->info("Postman Environment File - " . str_replace(base_path(), '', $environmentFilePath));
+		}
 	}
 
 	/**

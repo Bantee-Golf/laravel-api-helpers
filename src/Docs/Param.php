@@ -17,7 +17,7 @@ class Param
 	protected $dataType;
 	protected $defaultValue;
 	protected $description = '';
-	protected $location = self::LOCATION_FORM;
+	protected $location;
 
 	public function __construct($fieldName = null, $dataType = 'String', $description = null)
 	{
@@ -128,9 +128,9 @@ class Param
 	}
 
 	/**
-	 * @return string
+	 * @return null|string
 	 */
-	public function getLocation(): string
+	public function getLocation()
 	{
 		return $this->location;
 	}
