@@ -8,6 +8,10 @@ use Illuminate\Http\Response;
 
 class APICall
 {
+
+	const CONSUME_MULTIPART_FORM = 'multipart/form-data';
+	const CONSUME_FORM_URLENCODED = 'application/x-www-form-urlencoded';
+
 	protected $version = '1.0.0';
 	protected $method = '';
 	protected $name;
@@ -29,6 +33,8 @@ class APICall
 
 	protected $successExamples = [];
 	protected $errorExamples = [];
+
+	protected $consumes = [];
 
 	/**
 	 *
@@ -453,6 +459,24 @@ class APICall
 
 		$statusCodes = Response::$statusTexts;
 		return isset($statusCodes[$statusCode]) ? $statusCodes[$statusCode] : 'Unknown';
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getConsumes(): array
+	{
+		return $this->consumes;
+	}
+
+	/**
+	 * @param array $consumes
+	 */
+	public function setConsumes(array $consumes)
+	{
+		$this->consumes = $consumes;
+
+		return $this;
 	}
 
 }

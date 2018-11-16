@@ -5,10 +5,12 @@ namespace EMedia\Api\Console\Commands;
 
 
 use App\Entities\Auth\UsersRepository;
+use App\Entities\Files\File;
 use App\Http\Kernel;
 use Closure;
 use EMedia\Api\Docs\APICall;
 use EMedia\Api\Docs\Param;
+use EMedia\Api\Domain\ModelDefinition;
 use EMedia\Api\Exceptions\APICallsNotDefinedException;
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
 use EMedia\Api\Exceptions\UndocumentedAPIException;
@@ -94,16 +96,22 @@ class GenerateDocsCommand extends Command
 		}
 	}
 
+
 	/**
 	 * Execute the console command.
 	 *
 	 */
 	public function handle()
 	{
+		if (app()->environment('production')) {
+			$this->error('Application in production environment. This command cannot be run in this environment. Aborting...');
+			return false;
+		}
+
 		$user = (app(UsersRepository::class))->find($this->option('user-id'));
 
 		if (!$user) {
-			$this->error('A user with an ID' . $this->option('user-id') . ' is not found. Provide a new user user with the `--user-id` option.');
+			$this->error('A user with an ID of ' . $this->option('user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--user-id` option.');
 			return;
 		}
 		$this->user = $user;
@@ -245,6 +253,8 @@ class GenerateDocsCommand extends Command
 			$host = $urlParts['host'];
 		}
 
+		$allDefinitions = (new ModelDefinition())->getAllDefinitions();
+
 		$schema = [
 			'swagger' => '2.0',
 			'info' => [
@@ -272,32 +282,7 @@ class GenerateDocsCommand extends Command
 					'description' => 'Unique user authentication token',
 				],
 			],
-			'definitions' => [
-				'ApiErrorUnauthorized' => [
-					'type' => 'object',
-					'properties' => [
-						'message' => [ 'type' => 'string' ],
-						'result'  => [ 'type' => 'boolean', 'default' => true ],
-						'payload' => [ 'type' => 'object' ]
-					]
-				],
-				'ApiErrorAccessDenied' => [
-					'type' => 'object',
-					'properties' => [
-						'message' => [ 'type' => 'string' ],
-						'result'  => [ 'type' => 'boolean', 'default' => true ],
-						'payload' => [ 'type' => 'object' ]
-					]
-				],
-				'ApiError' => [
-					'type' => 'object',
-					'properties' => [
-						'message' => [ 'type' => 'string' ],
-						'result'  => [ 'type' => 'boolean', 'default' => true ],
-						'payload' => [ 'type' => 'object' ]
-					]
-				],
-			],
+			'definitions' => $allDefinitions,
 		];
 
 		// Postman environment
@@ -399,7 +384,7 @@ class GenerateDocsCommand extends Command
 
 				$location = $param->getLocation();
 				if ($location === null) {
-					$location = $method === 'get' ? Param::LOCATION_PATH : Param::LOCATION_FORM;
+					$location = $method === 'get' ? Param::LOCATION_QUERY : Param::LOCATION_FORM;
 				}
 
 				$paramData = [
@@ -429,14 +414,20 @@ class GenerateDocsCommand extends Command
 			}
 
 			$pathSuffix = str_replace(ltrim($basePath, '/'), '', $route);
+
+			$consumes = $item->getConsumes();
+			if (empty($consumes)) {
+				$consumes[] = APICall::CONSUME_MULTIPART_FORM;
+			}
+
 			$schema['paths'][$pathSuffix][$method] = [
 				'tags' => [
 					$item->getGroup(),
 				],
 				'summary' => $item->getName(),
-				'consumes' => ['application/x-www-form-urlencoded'],
+				'consumes' => $consumes,
 				'produces' => ['application/json'],
-				'description' => $item->getDescription(),
+				'description' => ($item->getDescription() === null)? '' : $item->getDescription(),
 				'parameters' => $parameters,
 				'security' => $securityDefinitions,
 				'responses' => [
@@ -445,21 +436,21 @@ class GenerateDocsCommand extends Command
 //					],
 					'401' => [
 						'schema' => [
-							'$ref' => '#/definitions/ApiErrorUnauthorized'
+							'$ref' => '#/definitions/ApiErrorUnauthorized',
 						],
-						'description' => 'Authentication failed'
+						'description' => 'Authentication failed',
 					],
 					'403' => [
 						'schema' => [
-							'$ref' => '#/definitions/ApiErrorAccessDenied'
+							'$ref' => '#/definitions/ApiErrorAccessDenied',
 						],
-						'description' => 'Access denied'
+						'description' => 'Access denied',
 					],
 					'422' => [
 						'schema' => [
-							'$ref' => '#/definitions/ApiError'
+							'$ref' => '#/definitions/ApiError',
 						],
-						'description' => 'Generic API error. Check `message` for more information.'
+						'description' => 'Generic API error. Check `message` for more information.',
 					],
 				],
 			];

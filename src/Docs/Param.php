@@ -11,6 +11,7 @@ class Param
 	const LOCATION_FORM = 'formData';
 	const LOCATION_COOKIE = 'cookie';
 	const LOCATION_PATH = 'path';
+	const LOCATION_QUERY = 'query';
 
 	protected $fieldName;
 	protected $required = true;
