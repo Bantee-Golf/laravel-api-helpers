@@ -159,19 +159,27 @@ class ModelDefinition
 		}
 
 		// append visible fields
-		foreach ($model->getVisible() as $visibleKey) {
-			if (!isset($fields[$visibleKey])) {
-				$fields[$visibleKey] = 'string';
+		$visibleFields = $model->getVisible();
+		$filteredFields = [];
+		if (empty($visibleFields)) {
+			$filteredFields = $fields;
+		} else {
+			foreach ($visibleFields as $visibleKey) {
+				if (isset($fields[$visibleKey])) {
+					$filteredFields[$visibleKey] = $fields[$visibleKey];
+				} else {
+					$filteredFields[$visibleKey] = 'string';
+				}
 			}
 		}
 
 		// remove hidden fields
 		foreach ($model->getHidden() as $hiddenKey) {
-			unset($fields[$hiddenKey]);
+			unset($filteredFields[$hiddenKey]);
 		}
 
 		$properties = [];
-		foreach ($fields as $key => $dataType) {
+		foreach ($filteredFields as $key => $dataType) {
 			$properties[$key] = ['type' => $dataType];
 		}
 
