@@ -417,7 +417,7 @@ class GenerateDocsCommand extends Command
 
 			$consumes = $item->getConsumes();
 			if (empty($consumes)) {
-				$consumes[] = APICall::CONSUME_MULTIPART_FORM;
+				$consumes[] = APICall::CONSUME_FORM_URLENCODED;
 			}
 
 			$schema['paths'][$pathSuffix][$method] = [
