@@ -158,4 +158,39 @@ class Param
 		return $this;
 	}
 
+	/**
+	 * @param $dataType
+	 *
+	 * @return string
+	 */
+	public static function getSwaggerDataType($dataType)
+	{
+		$dataType = strtolower($dataType);
+
+		switch ($dataType) {
+			case 'integer':
+				return 'integer';
+				break;
+			case 'float':
+			case 'double':
+				return 'number';
+				break;
+			case 'boolean':
+				return 'boolean';
+				break;
+			case 'array':
+				return 'array';
+			case 'object':
+				return 'object';
+				break;
+			case 'string':
+			case 'datetime':
+			case 'file':
+			case 'date':
+			case 'text':
+			default:
+				return 'string';
+		}
+	}
+
 }

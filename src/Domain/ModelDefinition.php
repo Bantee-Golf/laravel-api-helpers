@@ -4,6 +4,7 @@
 namespace EMedia\Api\Domain;
 
 
+use EMedia\Api\Docs\Param;
 use EMedia\PHPHelpers\Files\Loader;
 use Illuminate\Database\Eloquent\Model;
 
@@ -155,7 +156,12 @@ class ModelDefinition
 
 		$fields = [];
 		foreach ($columns as $column) {
-			$fields[$column->getName()] = $column->getType()->getName();
+			$dataType = $column->getType()->getName();
+
+			// change the data type to swagger's format
+			$dataType = Param::getSwaggerDataType($dataType);
+
+			$fields[$column->getName()] = $dataType;
 		}
 
 		// append visible fields
@@ -193,6 +199,8 @@ class ModelDefinition
 			],
 		];
 	}
+
+
 
 
 }
