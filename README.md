@@ -1,5 +1,6 @@
 # API Helpers for Laravel 5
 
+
 This package adds the following.
 
 - Custom request responses.
