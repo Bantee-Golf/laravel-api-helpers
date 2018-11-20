@@ -61,6 +61,8 @@ class GenerateDocsCommand extends Command
 
 	protected $user;
 
+	protected $modelDefinitionNames = [];
+
 	/**
 	 * Create a new command instance.
 	 *
@@ -253,7 +255,8 @@ class GenerateDocsCommand extends Command
 			$host = $urlParts['host'];
 		}
 
-		$allDefinitions = (new ModelDefinition())->getAllDefinitions();
+		$modelDefinition = new ModelDefinition();
+		$allDefinitions = $modelDefinition->getAllDefinitions();
 
 		$schema = [
 			'swagger' => '2.0',
@@ -265,7 +268,7 @@ class GenerateDocsCommand extends Command
 			'host' => $host,
 			'schemes' => [
 				// $urlParts['scheme'],
-				'http', 'https',
+				'https', 'http',
 			],
 			'basePath' => $basePath,
 			'paths' => [],
@@ -282,7 +285,6 @@ class GenerateDocsCommand extends Command
 					'description' => 'Unique user authentication token',
 				],
 			],
-			'definitions' => $allDefinitions,
 		];
 
 		// Postman environment
@@ -420,6 +422,32 @@ class GenerateDocsCommand extends Command
 				$consumes[] = APICall::CONSUME_FORM_URLENCODED;
 			}
 
+			// build success responses
+			$successObject = $item->getSuccessObject();
+			$successPaginatedObject = $item->getSuccessPaginatedObject();
+			$responseObjectName = str_replace(['/', ' '], '',
+					ucwords($item->getGroup()) . ucwords($item->getName())) . 'Response';
+			if ($successObject || $successPaginatedObject) {
+				if ($successObject) {
+					$successResponse = $modelDefinition->getSuccessResponseDefinition($responseObjectName, $successObject);
+				}
+
+				if ($successPaginatedObject) {
+					$successResponse = $modelDefinition->getSuccessResponsePaginatedDefinition($responseObjectName, $successPaginatedObject);
+				}
+
+				if (isset($allDefinitions[$responseObjectName])) {
+					$error = "Definition $responseObjectName already exists. Change the method group or name to be unique.";
+					$this->error($error);
+					throw new \Exception($error);
+				}
+
+				$allDefinitions = array_merge($allDefinitions, $successResponse);
+			} else {
+				// generic success response
+				$responseObjectName = 'SuccessResponse';
+			}
+
 			$schema['paths'][$pathSuffix][$method] = [
 				'tags' => [
 					$item->getGroup(),
@@ -431,9 +459,12 @@ class GenerateDocsCommand extends Command
 				'parameters' => $parameters,
 				'security' => $securityDefinitions,
 				'responses' => [
-//					'200' => [
-//
-//					],
+					'200' => [
+						'schema' => [
+							'$ref' => "#/definitions/$responseObjectName",
+						],
+						'description' => 'Success response',
+					],
 					'401' => [
 						'schema' => [
 							'$ref' => '#/definitions/ApiErrorUnauthorized',
@@ -455,6 +486,8 @@ class GenerateDocsCommand extends Command
 				],
 			];
 		}
+
+		$schema['definitions'] = $allDefinitions;
 
 		file_put_contents($outputPath, json_encode($schema, JSON_PRETTY_PRINT));
 		$this->info("Generated File - " . str_replace(base_path(), '', $outputPath));

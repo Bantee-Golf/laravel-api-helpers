@@ -33,6 +33,8 @@ class APICall
 
 	protected $successExamples = [];
 	protected $errorExamples = [];
+	protected $successObject;
+	protected $successPaginatedObject;
 
 	protected $consumes = [];
 
@@ -475,6 +477,39 @@ class APICall
 	public function setConsumes(array $consumes)
 	{
 		$this->consumes = $consumes;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getSuccessObject()
+	{
+		return $this->successObject;
+	}
+
+	/**
+	 * @param mixed $successObject
+	 */
+	public function setSuccessObject($successObject)
+	{
+		$this->successObject = $successObject;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getSuccessPaginatedObject()
+	{
+		return $this->successPaginatedObject;
+	}
+
+	public function setSuccessPaginatedObject($successPaginatedObject)
+	{
+		$this->successPaginatedObject = $successPaginatedObject;
 
 		return $this;
 	}

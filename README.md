@@ -126,6 +126,7 @@ For example, look at the `register()` method in `AuthController` below.
 					(new Param('Accept', 'String', '`application/json`'))->setDefaultValue('application/json'),
 					(new Param('x-api-key', 'String', 'API Key'))->setDefaultValue('123-123-123-123'),
 				])
+				->setSuccessObject(\App\User::class)
 				->setErrorExample('{
 					"message": "The email must be a valid email address.",
 					"payload": {
@@ -145,10 +146,48 @@ For example, look at the `register()` method in `AuthController` below.
 
 		// add function logic 
 
+		// return a single object
 		$responseData = []
 		return response()->apiSuccess($responseData);
 	}
 ```
+
+The above example defines and returns a single object. If you want to return a paginated list of objects, use the pagination methods instead.
+
+Example
+```
+	// definition
+	...
+		->setGroup('Properties')
+		->setSuccessPaginatedObject(Property::class)
+		->setSuccessExample('')
+	...
+	
+	// response
+	$paginator = Property::paginate();
+	return response()->apiSuccessPaginated($paginator);
+```
+
+### Define Additional Response Fields
+
+Swagger depends on the response fields that you send back. This generator script will read the Models and build the fields automatically. If you'd like to define any custom fields, add them to the Model with the `getExtraApiFields()` method.
+
+Example: Add 2 new fields to the response object as `is_active` and `access_token`
+```
+class User extends Authenticatable
+{
+
+	public function getExtraApiFields()
+	{
+		return [
+			'is_active' => 'boolean',
+			'access_token',         // if the data type is not given, it will default to `string`
+		];
+	}
+	
+}
+```
+
 
 After all API definitions are included, call the Generator with,
 ```

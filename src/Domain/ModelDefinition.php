@@ -35,6 +35,23 @@ class ModelDefinition
 			}
 		}
 
+		$definitions['SuccessResponse'] = [
+			'type' => 'object',
+			'properties' => [
+				'message' => [ 'type' => 'string' ],
+				'result'  => [ 'type' => 'boolean', 'default' => true ],
+				'payload' => [ 'type' => 'object' ],
+			],
+		];
+		$definitions['Paginator'] = [
+			'type' => 'object',
+			'properties' => [
+				'current_page' => [ 'type' => 'number' ],
+				'per_page'  => [ 'type' => 'number', 'default' => 50 ],
+				'to' => [ 'type' => 'number' ],
+			],
+		];
+
 		return $definitions;
 	}
 
@@ -74,6 +91,44 @@ class ModelDefinition
 		];
 	}
 
+	public function getSuccessResponseDefinition($responseName, $successObject)
+	{
+		$shortName = self::getModelShortName($successObject);
+
+		return [
+			$responseName => [
+				'type' => 'object',
+				'properties' => [
+					'message' => [ 'type' => 'string' ],
+					'result'  => [ 'type' => 'boolean', 'default' => true ],
+					'payload' => [ '$ref' => '#/definitions/' . $shortName ],
+				],
+			]
+		];
+	}
+
+	public function getSuccessResponsePaginatedDefinition($responseName, $successObject)
+	{
+		$shortName = self::getModelShortName($successObject);
+
+		return [
+			$responseName => [
+				'type' => 'object',
+				'properties' => [
+					'message' => [ 'type' => 'string' ],
+					'result'  => [ 'type' => 'boolean', 'default' => true ],
+					'payload' => [
+						'type' => 'array',
+						'items' => [
+							'$ref' => '#/definitions/' . $shortName
+						],
+					],
+					'paginator' => ['$ref' => '#/definitions/Paginator'],
+				],
+			]
+		];
+	}
+
 	/**
 	 *
 	 * Return all declared definitions
@@ -98,6 +153,11 @@ class ModelDefinition
 			$directories = [
 				app_path('Entities'),
 			];
+		}
+
+		$appendModelDirectories = array_filter(config('oxygen.api.modelDirectories', []));
+		if (!empty($appendModelDirectories)) {
+			$directories = array_merge($directories, $appendModelDirectories);
 		}
 
 		foreach ($directories as $dirPath) {
@@ -179,6 +239,18 @@ class ModelDefinition
 			}
 		}
 
+		// if there are external fields, add them
+		if (method_exists($model, 'getExtraApiFields')) {
+			$extraFields = $model->getExtraApiFields();
+			foreach ($extraFields as $key => $value) {
+				if (is_int($key)) {
+					$filteredFields[$value] = 'string';
+				} else {
+					$filteredFields[$key] = $value;
+				}
+			}
+		}
+
 		// remove hidden fields
 		foreach ($model->getHidden() as $hiddenKey) {
 			unset($filteredFields[$hiddenKey]);
@@ -189,7 +261,7 @@ class ModelDefinition
 			$properties[$key] = ['type' => $dataType];
 		}
 
-		$reflect = new \ReflectionClass($model);
+		$reflect = new \ReflectionClass($class);
 
 		return [
 			'name' => $reflect->getShortName(),
@@ -201,6 +273,12 @@ class ModelDefinition
 	}
 
 
+	public static function getModelShortName($class)
+	{
+		$reflect = new \ReflectionClass($class);
+
+		return $reflect->getShortName();
+	}
 
 
 }
