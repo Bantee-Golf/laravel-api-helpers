@@ -38,16 +38,16 @@ class ApiServiceProvider extends ServiceProvider
 			]);
 		});
 
-		Response::macro('apiSuccessPaginated', function (Paginator $paginator, $message = '') {
+		Response::macro('apiSuccessPaginated', function (Paginator $paginator, $message = '', $customData = []) {
 			$paginatorArray = $paginator->toArray();
 			if (isset($paginatorArray['data'])) unset($paginatorArray['data']);
 
-			return Response::json([
+			return Response::json(array_merge($customData, [
 				'payload' => $paginator->items(),
 				'paginator' => $paginatorArray,
 				'message' => $message,
 				'result'  => true,
-			]);
+			]));
 		});
 
 		//
