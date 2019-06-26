@@ -170,9 +170,9 @@ Example
 
 ### Define Additional Response Fields
 
-Swagger depends on the response fields that you send back. This generator script will read the Models and build the fields automatically. If you'd like to define any custom fields, add them to the Model with the `getExtraApiFields()` method.
+Swagger depends on the response fields that you send back. This generator script will read the Models and build the fields automatically. If you'd like to define any custom fields, add them to the Model with the `getExtraApiFields()` method. Note how you can add arrays and objects. This will be helpful when adding related entities as nested objects.
 
-Example: Add 2 new fields to the response object as `is_active` and `access_token`
+Example: Add 4 new fields to the response object as `is_active`, `access_token`, `author` and `comments` with different data types.
 ```
 class User extends Authenticatable
 {
@@ -181,7 +181,9 @@ class User extends Authenticatable
 	{
 		return [
 			'is_active' => 'boolean',
-			'access_token',         // if the data type is not given, it will default to `string`
+			'access_token',	// if the data type is not given, it will default to `string`
+			'author' => ['type' => 'object', 'items' => 'User'],	// User object should be exposed to API generator in a separate endpoint eg: /users
+			'comments' => ['type' => 'array', 'items' => 'Comment'], // User object should be exposed to API generator in a separate endpoint eg: /post/:id/comments
 		];
 	}
 	
