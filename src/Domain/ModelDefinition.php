@@ -187,15 +187,21 @@ class ModelDefinition
 	{
 		$model = app($model);
 
-		$table = $model->getConnection()->getTablePrefix() . $model->getTable();
-		$schema = $model->getConnection()->getDoctrineSchemaManager($table);
-		$databasePlatform = $schema->getDatabasePlatform();
-		$databasePlatform->registerDoctrineTypeMapping('enum', 'string');
-		$database = null;
-		if (strpos($table, '.')) {
-			list($database, $table) = explode('.', $table);
+		$tableName = $model->getTable();
+
+		if ($tableName) {
+			$table = $model->getConnection()->getTablePrefix() . $tableName;
+			$schema = $model->getConnection()->getDoctrineSchemaManager($table);
+			$databasePlatform = $schema->getDatabasePlatform();
+			$databasePlatform->registerDoctrineTypeMapping('enum', 'string');
+			$database = null;
+			if (strpos($table, '.')) {
+				list($database, $table) = explode('.', $table);
+			}
+			return $schema->listTableColumns($table, $database);
+		} else {
+			return null;
 		}
-		return $schema->listTableColumns($table, $database);
 	}
 
 
@@ -215,13 +221,15 @@ class ModelDefinition
 		$model = new $class;
 
 		$fields = [];
-		foreach ($columns as $column) {
-			$dataType = $column->getType()->getName();
+		if (!empty($columns)) {
+			foreach ($columns as $column) {
+				$dataType = $column->getType()->getName();
 
-			// change the data type to swagger's format
-			$dataType = Param::getSwaggerDataType($dataType);
+				// change the data type to swagger's format
+				$dataType = Param::getSwaggerDataType($dataType);
 
-			$fields[$column->getName()] = $dataType;
+				$fields[$column->getName()] = $dataType;
+			}
 		}
 
 		// append visible fields
@@ -257,8 +265,25 @@ class ModelDefinition
 		}
 
 		$properties = [];
-		foreach ($filteredFields as $key => $dataType) {
-			$properties[$key] = ['type' => $dataType];
+		foreach ($filteredFields as $key => $value) {
+			if (is_array($value) && isset($value['type'])) {
+				if ($value['type'] == 'array' && isset($value['items'])) {
+					$properties[$key] = [
+						'type' => $value['type'],
+						'items' => [
+							"\$ref" => "#/definitions/" . $value['items'],
+						],
+					];
+				} else if ($value['type'] == 'object' && isset($value['items'])) {
+					$properties[$key] = [
+						"\$ref" => "#/definitions/" . $value['items'],
+					];
+				} else {
+					$properties[$key] = ['type' => $value['type']];
+				}
+			} else {
+				$properties[$key] = ['type' => $value];
+			}
 		}
 
 		$reflect = new \ReflectionClass($class);
