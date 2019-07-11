@@ -20,10 +20,11 @@ class Param
 	protected $description = '';
 	protected $location;
 
-	public function __construct($fieldName = null, $dataType = 'String', $description = null)
+	public function __construct($fieldName = null, $dataType = 'String', $description = null, $location = null)
 	{
 		$this->fieldName = $fieldName;
 		$this->dataType = $dataType;
+		$this->location = $location;
 		if (!$description && $fieldName) {
 			$this->description = ucfirst(reverse_snake_case($fieldName));
 		} else {
