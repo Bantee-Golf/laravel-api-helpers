@@ -12,6 +12,7 @@ class Param
 	const LOCATION_COOKIE = 'cookie';
 	const LOCATION_PATH = 'path';
 	const LOCATION_QUERY = 'query';
+	const LOCATION_BODY = 'body';
 
 	protected $fieldName;
 	protected $required = true;
@@ -19,6 +20,7 @@ class Param
 	protected $defaultValue;
 	protected $description = '';
 	protected $location;
+	protected $model;
 
 	public function __construct($fieldName = null, $dataType = 'String', $description = null, $location = null)
 	{
@@ -148,6 +150,24 @@ class Param
 	}
 
 	/**
+	 * @param object $model
+	 */
+	public function setModel($model)
+	{
+		$this->model = $model;
+
+		return $this;
+	}
+
+	/**
+	 * @return object
+	 */
+	public function getModel()
+	{
+		return $this->model;
+	}
+
+	/**
 	 * @param mixed $defaultValue
 	 *
 	 * @return Param
@@ -182,6 +202,7 @@ class Param
 			case 'array':
 				return 'array';
 			case 'object':
+			case 'model':
 				return 'object';
 				break;
 			case 'string':

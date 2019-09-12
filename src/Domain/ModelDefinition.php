@@ -10,8 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ModelDefinition
 {
-
-
 	/**
 	 *
 	 * Get all model definitions
@@ -203,7 +201,6 @@ class ModelDefinition
 			return null;
 		}
 	}
-
 
 	/**
 	 *

@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 class APICall
 {
 
+	const CONSUME_JSON = 'application/json';
 	const CONSUME_MULTIPART_FORM = 'multipart/form-data';
 	const CONSUME_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 

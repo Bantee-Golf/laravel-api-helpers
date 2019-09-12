@@ -33,7 +33,7 @@ class GenerateDocsCommand extends Command
 	 *
 	 * @var string
 	 */
-	protected $signature = 'generate:docs 
+	protected $signature = 'generate:docs
 								{--user-id=3 : Default user ID to access the API}';
 
 	/**
@@ -389,14 +389,26 @@ class GenerateDocsCommand extends Command
 					$location = $method === 'get' ? Param::LOCATION_QUERY : Param::LOCATION_FORM;
 				}
 
-				$paramData = [
-					'name'        => $name,
-					'in'          => $location,
-					'required'    => $param->getRequired(),
-					'description' => $param->getDescription(),
-					'type'        => strtolower($dataType),
-					// 'schema'      => [],
-				];
+				if ($dataType === 'Model' && $model = $param->getModel()) {
+					$paramData = [
+						'name'        => 'body',
+						'in'          => 'body',
+						'required'    => $param->getRequired(),
+						'description' => $param->getDescription(),
+						'schema'      => [
+							'$ref' => '#/definitions/' . ModelDefinition::getModelShortName($model),
+						],
+					];
+				} else {
+					$paramData = [
+						'name'        => $name,
+						'in'          => $location,
+						'required'    => $param->getRequired(),
+						'description' => $param->getDescription(),
+						'type'        => strtolower($dataType),
+						// 'schema'      => [],
+					];
+				}
 
 				$parameters[] = $paramData;
 
