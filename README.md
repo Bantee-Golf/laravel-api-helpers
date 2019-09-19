@@ -1,4 +1,4 @@
-# API Helpers for Laravel 5
+# API Helpers for Laravel 5/6
 
 
 This package adds the following.
@@ -144,7 +144,7 @@ For example, look at the `register()` method in `AuthController` below.
 			// add validation rules
 		]);
 
-		// add function logic 
+		// add function logic
 
 		// return a single object
 		$responseData = []
@@ -162,7 +162,7 @@ Example
 		->setSuccessPaginatedObject(Property::class)
 		->setSuccessExample('')
 	...
-	
+
 	// response
 	$paginator = Property::paginate();
 	return response()->apiSuccessPaginated($paginator);
@@ -186,7 +186,7 @@ class User extends Authenticatable
 			'comments' => ['type' => 'array', 'items' => 'Comment'], // User object should be exposed to API generator in a separate endpoint eg: /post/:id/comments
 		];
 	}
-	
+
 }
 ```
 
