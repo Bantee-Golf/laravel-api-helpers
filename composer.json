@@ -1,12 +1,12 @@
 {
   "name": "emedia/api",
-  "description": "API and custom response helpers for Laravel 5",
+  "description": "API and custom response helpers for Laravel 6",
   "type": "package",
   "require": {
-    "php": "^7.1",
-    "illuminate/support": "^5.7|^6.0",
-    "illuminate/database": "^5.7|^6.0",
-    "illuminate/http": "^5.7|^6.0"
+    "php": "^7.2",
+    "illuminate/support": "^6.0",
+    "illuminate/database": "^6.0",
+    "illuminate/http": "^6.0"
   },
   "license": "private",
   "authors": [

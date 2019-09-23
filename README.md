@@ -1,5 +1,4 @@
-# API Helpers for Laravel 5/6
-
+# API Helpers for Laravel 6
 
 This package adds the following.
 
@@ -20,7 +19,9 @@ Add the repository to `composer.json`
 composer require emedia/api
 ```
 
-The package will be auto-discovered in Laravel 5.7.
+The package will be auto-discovered.
+
+Use version 2.1.x for Laravel 5.7
 
 ## Usage
 

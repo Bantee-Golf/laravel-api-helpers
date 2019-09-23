@@ -569,7 +569,7 @@ class GenerateDocsCommand extends Command
 		$request = Request::create($url, $method);
 
 		$apiKeys = env('API_KEY');
-		$apiKey  = array_first(explode(',', $apiKeys));
+		$apiKey  = \Illuminate\Support\Arr::first(explode(',', $apiKeys));
 		if (empty($apiKey)) {
 			$this->error("AN API_KEY not found on `.env` file");
 		}
