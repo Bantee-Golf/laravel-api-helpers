@@ -527,7 +527,7 @@ class GenerateDocsCommand extends Command
 
 		foreach ($items as $item) {
 			/** @var APICall $item */
-			$outputFile = snake_case($item->getGroup() . '.coffee');
+			$outputFile = \Illuminate\Support\Str::snake($item->getGroup() . '.coffee');
 			$outputPath = $docsFolder . DIRECTORY_SEPARATOR . $outputFile;
 
 			$lines = [];
