@@ -118,7 +118,7 @@ class GenerateDocsCommand extends Command
 		}
 		$this->user = $user;
 
-		if (count($this->routes) === 0) {
+		if (is_countable($this->routes) && count($this->routes) === 0) {
 			$this->error("Your application doesn't have any routes. Aborting...");
 			return;
 		}
@@ -204,7 +204,7 @@ class GenerateDocsCommand extends Command
 
 		// check if we found any defined calls
 		$items = $this->docBuilder->getApiCalls();
-		$itemCount = count($items);
+		$itemCount = is_countable($items) ? count($items) : 0;
 
 		$this->info("");
 		$this->info("API Doc Builder found {$itemCount} defined APICalls.");
@@ -361,7 +361,7 @@ class GenerateDocsCommand extends Command
 				// if the parameter contains a `.`, it's a data array
 				$name = '';
 				$nameParts = explode('.', $param->getName());
-				$namePartsCount = count($nameParts);
+				$namePartsCount = is_countable($nameParts) ? count($nameParts) : 0;
 				if ($namePartsCount <= 1) {
 					$name = $nameParts[0];
 				} else {
@@ -602,7 +602,7 @@ class GenerateDocsCommand extends Command
 	protected function getRouteInformation(Route $route)
 	{
 		$methods = $route->methods();
-		if (count($methods) === 1) {
+		if (is_countable($methods) && count($methods) === 1) {
 			$method = $methods[0];
 		} else {
 			if (in_array('GET', $methods)) {
