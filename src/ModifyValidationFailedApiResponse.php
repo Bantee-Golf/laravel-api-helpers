@@ -1,6 +1,8 @@
 <?php
 namespace EMedia\Api;
 
+use Illuminate\Support\Arr;
+
 trait ModifyValidationFailedApiResponse
 {
 
@@ -22,7 +24,7 @@ trait ModifyValidationFailedApiResponse
 			return parent::validate($request, $rules, $messages, $customAttributes);
 		} catch (\Illuminate\Validation\ValidationException $ex) {
 			if ($request->expectsJson() && !$request->pjax()) {
-				$errorMessages = array_flatten($ex->errors());
+				$errorMessages = Arr::flatten($ex->errors());
 				$mergedErrorMessages = implode(' ', $errorMessages);
 				$data = [
 					'errors' => $ex->errors(),
