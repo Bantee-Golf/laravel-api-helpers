@@ -194,8 +194,8 @@ class ModelDefinition
 			$databasePlatform->registerDoctrineTypeMapping('enum', 'string');
 
             if ( !empty(config('database.doctrine_type_maps')) ) {
-                foreach (config('database.doctrine_type_maps') as $type => $key) {
-                    $databasePlatform->registerDoctrineTypeMapping('point', 'string');
+                foreach (config('database.doctrine_type_maps') as $type => $map) {
+                    $databasePlatform->registerDoctrineTypeMapping($type, $map);
                 }
             }
 
