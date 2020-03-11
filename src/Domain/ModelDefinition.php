@@ -192,7 +192,14 @@ class ModelDefinition
 			$schema = $model->getConnection()->getDoctrineSchemaManager($table);
 			$databasePlatform = $schema->getDatabasePlatform();
 			$databasePlatform->registerDoctrineTypeMapping('enum', 'string');
-			$database = null;
+
+            if ( !empty(config('database.doctrine_type_maps')) ) {
+                foreach (config('database.doctrine_type_maps') as $type => $map) {
+                    $databasePlatform->registerDoctrineTypeMapping($type, $map);
+                }
+            }
+
+            $database = null;
 			if (strpos($table, '.')) {
 				list($database, $table) = explode('.', $table);
 			}
