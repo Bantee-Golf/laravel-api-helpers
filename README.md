@@ -191,6 +191,26 @@ class User extends Authenticatable
 }
 ```
 
+### Define Custom Type Maps (Optional)
+
+While generating documentation, The generator using `Doctrine\DBAL\Platforms` to get `Type Maps`. In this situation you may get 
+**following error message**, If you have some **unsupported column types** in the model.
+
+```
+[Doctrine\DBAL\DBALException]
+Unknown database type point requested, Doctrine\DBAL\Platforms\MySQL57Platform may not support it.
+```
+
+To fix above issue, You need to add `Custom Type Maps` in your `Config/database.php` file.
+
+```php
+// Add following `doctrine_type_maps` key to the main array.
+
+'doctrine_type_maps' => [
+    'point' => 'string' // 'column_type' => 'mapping type'
+]
+```
+
 
 After all API definitions are included, call the Generator with,
 ```
