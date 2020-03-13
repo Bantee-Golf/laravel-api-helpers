@@ -183,10 +183,10 @@ class User extends Authenticatable
 		return [
 			'is_active' => 'boolean',
 			'access_token',	// if the data type is not given, it will default to `string`
-                        'latitude' => [ // specify data type and formats (Swagger Data Types)
-                            'type' => 'Number',
-                            'format' => 'Double'
-                        ],
+            'latitude' => [ // specify data type and formats (Swagger Data Types)
+                'type' => 'Number',
+                'format' => 'Double'
+            ],
 			'author' => ['type' => 'object', 'items' => 'User'],	// User object should be exposed to API generator in a separate endpoint eg: /users
 			'comments' => ['type' => 'array', 'items' => 'Comment'], // User object should be exposed to API generator in a separate endpoint eg: /post/:id/comments
 		];
