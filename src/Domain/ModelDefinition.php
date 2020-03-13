@@ -283,7 +283,16 @@ class ModelDefinition
 						"\$ref" => "#/definitions/" . $value['items'],
 					];
 				} else {
-					$properties[$key] = ['type' => $value['type']];
+                    if (isset($value['format'])) {
+                        $properties[$key] = [
+                            'type' => $value['type'],
+                            'format' => $value['format']
+                        ];
+                    } else {
+                        $properties[$key] = [
+                            'type' => $value['type'],
+                        ];
+                    }
 				}
 			} else {
 				$properties[$key] = ['type' => $value];
