@@ -4,9 +4,9 @@
   "type": "package",
   "require": {
     "php": "^7.2",
-    "illuminate/support": "^6.0",
-    "illuminate/database": "^6.0",
-    "illuminate/http": "^6.0"
+    "illuminate/support": "^6.0|^7.0",
+    "illuminate/database": "^6.0|^7.0",
+    "illuminate/http": "^6.0|^7.0"
   },
   "license": "private",
   "authors": [
