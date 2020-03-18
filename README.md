@@ -1,4 +1,4 @@
-# API Helpers for Laravel 6
+# API Helpers for Laravel 6 and 7
 
 This package adds the following.
 
@@ -22,6 +22,12 @@ composer require emedia/api
 The package will be auto-discovered.
 
 Use version 2.1.x for Laravel 5.7
+
+| Laravel       | Version      |
+| ------------- |:------------:|
+| 7             | 3.1.x        |
+| 6             | 3.x        |
+| 5.7           | 2.1.x        |
 
 ## Usage
 

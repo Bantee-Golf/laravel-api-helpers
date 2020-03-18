@@ -1,6 +1,6 @@
 {
   "name": "emedia/api",
-  "description": "API and custom response helpers for Laravel 6",
+  "description": "API and custom response helpers for Laravel 6 and 7",
   "type": "package",
   "require": {
     "php": "^7.2",
