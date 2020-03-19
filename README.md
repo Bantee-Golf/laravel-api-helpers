@@ -21,13 +21,13 @@ composer require emedia/api
 
 The package will be auto-discovered.
 
-Use version 2.1.x for Laravel 5.7
+Use versions as below.
 
-| Laravel       | Version      |
-| ------------- |:------------:|
-| 7             | 3.1.x        |
-| 6             | 3.x        |
-| 5.7           | 2.1.x        |
+| Laravel Version | Api Helpers Version      |
+| --------------- |:------------------------:|
+| 7               | 3.1.x                    |
+| 6               | 3.0.x                    |
+| 5.7             | 2.1.x                    |
 
 ## Usage
 
