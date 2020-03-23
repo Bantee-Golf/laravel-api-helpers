@@ -272,12 +272,26 @@ class ModelDefinition
 		foreach ($filteredFields as $key => $value) {
 			if (is_array($value) && isset($value['type'])) {
 				if ($value['type'] == 'array' && isset($value['items'])) {
-					$properties[$key] = [
-						'type' => $value['type'],
-						'items' => [
-							"\$ref" => "#/definitions/" . $value['items'],
-						],
-					];
+                    if (is_array($value['items'])) {
+                        $properties[$key] = [
+                            'type' => $value['type'],
+                            'items' => [
+                                "type" => $value['items']['type'],
+                            ],
+                        ];
+
+                        if (isset($value['items']['format'])) {
+                            $properties[$key]['items']['format'] = $value['items']['format'];
+                        }
+
+                    } else {
+                        $properties[$key] = [
+                            'type' => $value['type'],
+                            'items' => [
+                                "\$ref" => "#/definitions/" . $value['items'],
+                            ],
+                        ];
+                    }
 				} else if ($value['type'] == 'object' && isset($value['items'])) {
 					$properties[$key] = [
 						"\$ref" => "#/definitions/" . $value['items'],
