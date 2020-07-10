@@ -10,6 +10,7 @@ use App\Http\Kernel;
 use Closure;
 use EMedia\Api\Docs\APICall;
 use EMedia\Api\Docs\Param;
+use EMedia\Api\Domain\FileGenerators\Postman\PostmanEnvironment;
 use EMedia\Api\Domain\ModelDefinition;
 use EMedia\Api\Exceptions\APICallsNotDefinedException;
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
@@ -183,7 +184,7 @@ class GenerateDocsCommand extends Command
 
 				// if the documentation is defined, we should not reach here
 				// so throw a new exception
-				throw new UndocumentedAPIException("Route {$routeInfo['url']} does not have an API documented");
+				throw new UndocumentedAPIException("Route {$routeInfo['url']} does not have an API documented. You need to add the `document()` method on this route for {$routeInfo['method']} call.");
 
 			} catch (DocumentationModeEnabledException $ex) {
 				// do nothing.
@@ -288,20 +289,9 @@ class GenerateDocsCommand extends Command
 		];
 
 		// Postman environment
-		$environment = [
-			'name' => config('app.name') . ' Environment',
-			'_postman_variable_scope' => 'environment',
-			'values' => [],
-		];
-
-		// set the domain variable
-		$environment['values'][] = [
-			'key' => 'domain',
-			'value' => $urlParts['host'],
-			'description' => 'Domain host',
-			'type' => 'string',
-			'enabled' => true,
-		];
+		$postmanEnvironment = new PostmanEnvironment();
+		$postmanEnvironment->setName(config('app.name') . ' Environment');
+		$postmanEnvironment->addVariable('domain', $urlParts['host']);
 
 		foreach ($items as $item) {
 			/** @var APICall $item */
@@ -412,19 +402,8 @@ class GenerateDocsCommand extends Command
 
 				$parameters[] = $paramData;
 
-				$existingParams = array_filter($environment['values'], function ($value) use ($name) {
-					return ($value['key'] === $name);
-				});
-
-				if (!count($existingParams)) {
-					$environment['values'][] = [
-						'key' => $name,
-						'value' => $param->getDefaultValue(),
-						'description' => $param->getDescription(),
-						'type' => $param->getDataType(),
-						'enabled' => true,
-					];
-				}
+				// add variable to Environment file
+				$postmanEnvironment->addVariable($name, $param->getDefaultValue());
 			}
 
 			$pathSuffix = str_replace(ltrim($basePath, '/'), '', $route);
@@ -505,8 +484,8 @@ class GenerateDocsCommand extends Command
 		$this->info("Generated File - " . str_replace(base_path(), '', $outputPath));
 
 		if ($type === 'postman') {
-			file_put_contents($environmentFilePath, json_encode($environment, JSON_PRETTY_PRINT));
-			$this->info("Postman Environment File - " . str_replace(base_path(), '', $environmentFilePath));
+			$postmanEnvironment->writeOutputFile($environmentFilePath);
+			$this->info("Postman Environment File - " . pathinfo($environmentFilePath, PATHINFO_BASENAME));
 		}
 	}
 
