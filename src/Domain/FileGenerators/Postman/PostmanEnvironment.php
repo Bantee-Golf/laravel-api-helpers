@@ -4,15 +4,14 @@
 namespace EMedia\Api\Domain\FileGenerators\Postman;
 
 
+use EMedia\Api\Domain\FileGenerators\BaseFileGenerator;
 use EMedia\Api\Exceptions\FileGenerationFailedException;
 use EMedia\PHPHelpers\Files\DirManager;
 use Illuminate\Contracts\Filesystem\FileExistsException;
 use Illuminate\Support\Collection;
 
-class PostmanEnvironment
+class PostmanEnvironment extends BaseFileGenerator
 {
-
-	protected $meta = [];
 
 	/**
 	 * @var Collection
@@ -21,7 +20,7 @@ class PostmanEnvironment
 
 	public function __construct()
 	{
-		$this->addMeta('_postman_variable_scope', 'environment');
+		$this->addToSchema('_postman_variable_scope', 'environment');
 		$this->variables = new Collection();
 	}
 
@@ -34,22 +33,25 @@ class PostmanEnvironment
 	 */
 	public function setName($name)
 	{
-		$this->addMeta('name', $name);
+		$this->addToSchema('name', $name);
 
 		return $this;
 	}
 
 	/**
 	 *
-	 * Add MetaData for Environment
+	 * Set the Server URL for OpenAPI 3 Spec
 	 *
-	 * @param $key
-	 * @param $value
+	 * @example https://api.example.com
+	 * @example https://api.example.com/v1
+	 *
+	 * @param $serverUrl
 	 * @return $this
 	 */
-	public function addMeta($key, $value)
+	public function setServerUrl($serverUrl)
 	{
-		$this->meta[$key] = $value;
+		$this->addVariable('scheme', parse_url($serverUrl, PHP_URL_SCHEME));
+		$this->addVariable('host', 	 parse_url($serverUrl,  PHP_URL_HOST));
 
 		return $this;
 	}
@@ -64,11 +66,19 @@ class PostmanEnvironment
 	 */
 	public function addVariable($variableName, $initialValue)
 	{
-		$existingVariable = $this->getVariable($variableName);
+		$isUpdated = false;
 
-		if ($existingVariable) {
-			$existingVariable['value'] = $initialValue;
-		} else {
+		// update existing value if found
+		$this->variables->transform(function ($item) use ($variableName, $initialValue, &$isUpdated) {
+			if ($item['key'] === $variableName) {
+				$item['value'] = $initialValue;
+				$isUpdated = true;
+			}
+			return $item;
+		});
+
+		// add a new value
+		if (!$isUpdated) {
 			$this->variables->push([
 				'key' => $variableName,
 				'value' => $initialValue,
@@ -80,62 +90,17 @@ class PostmanEnvironment
 
 	/**
 	 *
-	 * Get an existing variable (as an array) if exists
-	 *
-	 * @param $variableName
-	 * @return mixed
-	 */
-	public function getVariable($variableName)
-	{
-		return $this->variables->first(function ($var) use ($variableName) {
-			return $var['key'] === $variableName;
-		});
-	}
-
-	/**
-	 *
 	 * Get generated output array
 	 *
 	 * @return array
 	 */
 	public function getOutput()
 	{
-		$output = $this->meta;
+		$output = $this->schema;
 
 		$output['values'] = $this->variables;
 
 		return $output;
-	}
-
-	/**
-	 *
-	 * Write generated output to a JSON file
-	 *
-	 * @param $outputFilePath
-	 * @param bool $overwrite
-	 * @return bool
-	 * @throws FileExistsException
-	 * @throws FileGenerationFailedException
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
-	 */
-	public function writeOutputFile($outputFilePath, $overwrite = true)
-	{
-		if (!$overwrite && file_exists($outputFilePath)) {
-			throw new FileExistsException("File {$outputFilePath} already exists.");
-		}
-
-		try {
-			$outputString = json_encode($this->getOutput(), JSON_PRETTY_PRINT);
-		} catch (\Exception $ex) {
-			throw new FileGenerationFailedException("Failed to generate a valid output.");
-		}
-
-		$outputDir = pathinfo($outputFilePath, PATHINFO_DIRNAME);
-		DirManager::makeDirectoryIfNotExists($outputDir);
-
-		file_put_contents($outputFilePath, $outputString);
-
-		return true;
 	}
 
 

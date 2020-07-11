@@ -10,7 +10,9 @@ use App\Http\Kernel;
 use Closure;
 use EMedia\Api\Docs\APICall;
 use EMedia\Api\Docs\Param;
+use EMedia\Api\Docs\ParamType;
 use EMedia\Api\Domain\FileGenerators\Postman\PostmanEnvironment;
+use EMedia\Api\Domain\FileGenerators\Swagger\SwaggerV2;
 use EMedia\Api\Domain\ModelDefinition;
 use EMedia\Api\Exceptions\APICallsNotDefinedException;
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
@@ -64,6 +66,8 @@ class GenerateDocsCommand extends Command
 
 	protected $modelDefinitionNames = [];
 
+	protected $docsFolder;
+
 	/**
 	 * Create a new command instance.
 	 *
@@ -79,50 +83,18 @@ class GenerateDocsCommand extends Command
 
 	/**
 	 *
-	 * Define the default headers for all routes
-	 *
-	 */
-	protected function defineDefaultHeaders()
-	{
-		try {
-			document(function () {
-				return (new APICall)->setDefine('default_headers')
-									->setHeaders([
-										(new Param('Accept', 'String', 'Set to `application/json`'))->setDefaultValue('application/json'),
-										(new Param('x-api-key', 'String', 'API Key')),
-										(new Param('x-access-token', 'String', 'Unique user authentication token')),
-									]);
-			});
-		} catch (DocumentationModeEnabledException $ex) {
-			// Do Nothing
-			// This exception will always be thrown while in documentation mode
-		}
-	}
-
-
-	/**
 	 * Execute the console command.
 	 *
 	 */
 	public function handle()
 	{
-		if (app()->environment('production')) {
-			$this->error('Application in production environment. This command cannot be run in this environment. Aborting...');
+		if (!$this->checkIsAllowedToRun()) {
+			$this->error('Aborting...');
 			return false;
 		}
 
-		$user = (app(UsersRepository::class))->find($this->option('user-id'));
-
-		if (!$user) {
-			$this->error('A user with an ID of ' . $this->option('user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--user-id` option.');
-			return;
-		}
-		$this->user = $user;
-
-		if (is_countable($this->routes) && count($this->routes) === 0) {
-			$this->error("Your application doesn't have any routes. Aborting...");
-			return;
-		}
+		$this->docsFolder = public_path('docs');
+		DirManager::makeDirectoryIfNotExists($this->docsFolder);
 
 		putenv('DOCUMENTATION_MODE=true');
 		$this->docBuilder = app('emedia.api.builder');
@@ -151,6 +123,59 @@ class GenerateDocsCommand extends Command
 		}
 	}
 
+	/**
+	 *
+	 * Check if you're allowed to run the command
+	 *
+	 * @return bool
+	 */
+	protected function checkIsAllowedToRun(): bool
+	{
+		// startup checks
+		if (app()->environment('production')) {
+			$this->error('Application in production environment. This command cannot be run in this environment.');
+			return false;
+		}
+
+		// get the default user
+		$user = (app(UsersRepository::class))->find($this->option('user-id'));
+
+		if (!$user) {
+			$this->error('A user with an ID of ' . $this->option('user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--user-id` option.');
+			return false;
+		}
+		$this->user = $user;
+
+		if (is_countable($this->routes) && count($this->routes) === 0) {
+			$this->error("Your application doesn't have any routes.");
+			return false;
+		}
+		// end start-up checks
+
+		return true;
+	}
+
+	/**
+	 *
+	 * Define the default headers for all routes
+	 *
+	 */
+	protected function defineDefaultHeaders()
+	{
+		try {
+			document(function () {
+				return (new APICall)->setDefine('default_headers')
+					->setHeaders([
+						(new Param('Accept', ParamType::STRING, 'Set to `application/json`'))->setDefaultValue('application/json'),
+						(new Param('x-api-key', ParamType::STRING, 'API Key')),
+						(new Param('x-access-token', ParamType::STRING, 'Unique user authentication token')),
+					]);
+			});
+		} catch (DocumentationModeEnabledException $ex) {
+			// Do Nothing
+			// This exception will always be thrown while in documentation mode
+		}
+	}
 
 	/**
 	 *
@@ -235,63 +260,21 @@ class GenerateDocsCommand extends Command
 		}
 
 		$items = $this->docBuilder->getApiCalls();
-
-		$docsFolder = public_path('docs');
-		DirManager::makeDirectoryIfNotExists($docsFolder);
-
-		$outputPath = $docsFolder . DIRECTORY_SEPARATOR . $fileName;
-		$environmentFilePath = $docsFolder . DIRECTORY_SEPARATOR . 'postman_environment.json';
-
-		$urlParts = parse_url(config('app.url'));
+		$outputPath = $this->docsFolder . DIRECTORY_SEPARATOR . $fileName;
 
 		// TODO: don't hardcode the version
 		$basePath = '/api/v1';
 
-		// Structure
-		// https://swagger.io/docs/specification/2-0/basic-structure/
-
-		if ($type === 'postman') {
-			$host = '{{domain}}';
-		} else {
-			$host = $urlParts['host'];
-		}
-
 		$modelDefinition = new ModelDefinition();
 		$allDefinitions = $modelDefinition->getAllDefinitions();
 
-		$schema = [
-			'swagger' => '2.0',
-			'info' => [
-				'title' => config('app.name') . ' Backend API',
-				// 'description' => 'The description',
-				'version' => '1.0.0',
-			],
-			'host' => $host,
-			'schemes' => [
-				// $urlParts['scheme'],
-				'https', 'http',
-			],
-			'basePath' => $basePath,
-			'paths' => [],
-			'securityDefinitions' => [
-				'apiKey' => [
-					'type' => 'apiKey',
-					'name' => 'x-api-key',
-					'in' => 'header',
-				],
-				'accessToken' => [
-					'type' => 'apiKey',
-					'name' => 'x-access-token',
-					'in' => 'header',
-					'description' => 'Unique user authentication token',
-				],
-			],
-		];
-
 		// Postman environment
 		$postmanEnvironment = new PostmanEnvironment();
-		$postmanEnvironment->setName(config('app.name') . ' Environment');
-		$postmanEnvironment->addVariable('domain', $urlParts['host']);
+
+		// Swagger Config
+		$swaggerConfig = new SwaggerV2();
+		$swaggerConfig->setBasePath($basePath);
+		$swaggerConfig->setServerUrl(getenv('APP_URL'));
 
 		foreach ($items as $item) {
 			/** @var APICall $item */
@@ -439,7 +422,7 @@ class GenerateDocsCommand extends Command
 				$responseObjectName = 'SuccessResponse';
 			}
 
-			$schema['paths'][$pathSuffix][$method] = [
+			$pathData = [
 				'tags' => [
 					$item->getGroup(),
 				],
@@ -476,16 +459,74 @@ class GenerateDocsCommand extends Command
 					],
 				],
 			];
+
+			$swaggerConfig->addPathData($pathSuffix, $method, $pathData);
 		}
 
-		$schema['definitions'] = $allDefinitions;
-
-		file_put_contents($outputPath, json_encode($schema, JSON_PRETTY_PRINT));
-		$this->info("Generated File - " . str_replace(base_path(), '', $outputPath));
+		$swaggerConfig->addToSchema('definitions', $allDefinitions);
 
 		if ($type === 'postman') {
-			$postmanEnvironment->writeOutputFile($environmentFilePath);
-			$this->info("Postman Environment File - " . pathinfo($environmentFilePath, PATHINFO_BASENAME));
+			$swaggerConfig->setHost('{{host}}');
+			$swaggerConfig->setSchemes(['{{scheme}}']);
+			$this->writePostmanEnvironments($postmanEnvironment);
+		} else {
+			// if there is a sandbox URL, we should use that as the host
+			if (getenv('APP_SANDBOX_URL') !== false) {
+				$swaggerConfig->setServerUrl(getenv('APP_SANDBOX_URL'));
+				$swaggerConfig->setSchemes(['http', 'https']);
+			}
+		}
+
+		$swaggerConfig->writeOutputFile($outputPath);
+		$this->info("Generated File - {$this->stripBasePpath($outputPath)}");
+	}
+
+
+
+	/**
+	 *
+	 * Write Postman Environment Files
+	 *
+	 * @param PostmanEnvironment $postmanEnvironment
+	 * @throws \EMedia\ApiBuilder\Exceptions\FileGenerationFailedException
+	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 * @throws \Illuminate\Contracts\Filesystem\FileExistsException
+	 */
+	protected function writePostmanEnvironments(PostmanEnvironment $postmanEnvironment)
+	{
+		// Generate Local Environment Config
+		if (getenv('APP_ENV') === 'local') {
+			$filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_local.json';
+			$postmanEnvironment->setName(sprintf("%s Environment (LOCAL)", config('app.name')));
+			$postmanEnvironment->setServerUrl(getenv('APP_URL'));
+
+			if (getenv('API_KEY') !== false) {
+				$postmanEnvironment->addVariable('x-api-key', getenv('API_KEY'));
+			}
+
+			$postmanEnvironment->writeOutputFile($filePath);
+			$this->info("Postman Local Environment Generated - `{$this->stripBasePpath($filePath)}`");
+		} else {
+			$this->error("Failed to create Local Environment file. Run this on a `local` environment.");
+		}
+
+		// Generate Sandbox Environment Config
+		if (getenv('APP_SANDBOX_URL') === false) {
+			$this->info("`APP_SANDBOX_URL` not found in your `.env`. Sandbox Environment file not generated.");
+		} else {
+			$postmanEnvironment->setName(sprintf("%s Environment (SANDBOX)", config('app.name')));
+			$filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_sandbox.json';
+			$postmanEnvironment->setServerUrl(getenv('APP_SANDBOX_URL'));
+
+			// force https on sandbox URLs to prevent people doing stupid things
+			$postmanEnvironment->addVariable('scheme', 'https');
+
+			if (getenv('APP_SANDBOX_API_KEY') !== false) {
+				$postmanEnvironment->addVariable('x-api-key', getenv('APP_SANDBOX_API_KEY'));
+			}
+
+			$postmanEnvironment->writeOutputFile($filePath);
+			$this->info("Postman Sandbox Environment Generated - `{$this->stripBasePpath($filePath)}`");
 		}
 	}
 
@@ -615,4 +656,8 @@ class GenerateDocsCommand extends Command
 		})->implode(',');
 	}
 
+	protected function stripBasePpath($path)
+	{
+		return str_replace(base_path(), '', $path);
+	}
 }
