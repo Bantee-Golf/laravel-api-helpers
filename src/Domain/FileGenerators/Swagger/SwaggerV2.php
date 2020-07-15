@@ -56,6 +56,7 @@ class SwaggerV2 extends BaseFileGenerator
 	}
 
 
+
 	/**
 	 *
 	 * Set basePath of API
@@ -79,7 +80,7 @@ class SwaggerV2 extends BaseFileGenerator
 
 	/**
 	 *
-	 * Set the Server host and schemes from a URL for OpenAPI 2 Spec
+	 * Set the Server host and schemes from a URL for OpenApi 2 Spec
 	 *
 	 * @example https://api.example.com
 	 * @example https://api.example.com/v1
@@ -127,6 +128,11 @@ class SwaggerV2 extends BaseFileGenerator
 		return $this;
 	}
 
+
+	public function getSchema()
+	{
+		return $this->schema;
+	}
 
 	/**
 	 *

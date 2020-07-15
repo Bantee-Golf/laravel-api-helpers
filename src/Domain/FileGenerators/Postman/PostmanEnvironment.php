@@ -40,7 +40,7 @@ class PostmanEnvironment extends BaseFileGenerator
 
 	/**
 	 *
-	 * Set the Server URL for OpenAPI 3 Spec
+	 * Set the Server URL for OpenApi 3 Spec
 	 *
 	 * @example https://api.example.com
 	 * @example https://api.example.com/v1
@@ -84,6 +84,22 @@ class PostmanEnvironment extends BaseFileGenerator
 				'value' => $initialValue,
 			]);
 		}
+
+		return $this;
+	}
+
+	/**
+	 *
+	 * Remove a variable by name
+	 *
+	 * @param $variableName
+	 * @return $this
+	 */
+	public function removeVariable($variableName)
+	{
+		$this->variables = $this->variables->reject(function ($item) use ($variableName) {
+			return $item['key'] === $variableName;
+		});
 
 		return $this;
 	}

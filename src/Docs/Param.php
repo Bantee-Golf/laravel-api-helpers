@@ -4,15 +4,19 @@
 namespace EMedia\Api\Docs;
 
 
-class Param
+use Illuminate\Contracts\Support\Arrayable;
+
+class Param implements Arrayable, \JsonSerializable
 {
 
-	const LOCATION_HEADER = 'header';
-	const LOCATION_FORM = 'formData';
-	const LOCATION_COOKIE = 'cookie';
-	const LOCATION_PATH = 'path';
-	const LOCATION_QUERY = 'query';
-	const LOCATION_BODY = 'body';
+	public const LOCATION_HEADER 	= 'header';
+	public const LOCATION_FORM 		= 'formData';
+	public const LOCATION_COOKIE 	= 'cookie';
+	public const LOCATION_PATH 		= 'path';
+	public const LOCATION_QUERY 	= 'query';
+	public const LOCATION_BODY 		= 'body';
+
+	public const TYPE_STRING = 'string';
 
 	protected $fieldName;
 	protected $required = true;
@@ -22,7 +26,10 @@ class Param
 	protected $location;
 	protected $model;
 
-	public function __construct($fieldName = null, $dataType = 'String', $description = null, $location = null)
+	protected $variable;
+	protected $example;
+
+	public function __construct($fieldName = null, $dataType = self::TYPE_STRING, $description = null, $location = null)
 	{
 		$this->fieldName = $fieldName;
 		$this->dataType = $dataType;
@@ -215,4 +222,74 @@ class Param
 		}
 	}
 
+	/**
+	 *
+	 * toArray response
+	 *
+	 * @return array
+	 */
+	public function toArray(): array
+	{
+		return [
+			'fieldName' => $this->fieldName,
+			'required' => $this->required,
+			'dataType' => $this->dataType,
+			'defaultValue' => $this->defaultValue,
+			'location' => $this->location,
+			'model' => $this->model,
+			'variable' => $this->variable,
+			'example' => $this->example,
+		];
+	}
+
+	public function jsonSerialize()
+	{
+		return $this->toArray();
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getExample()
+	{
+		return $this->example;
+	}
+
+	/**
+	 * @param mixed $example
+	 */
+	public function setExample($example)
+	{
+		$this->example = $example;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getVariable()
+	{
+		return $this->variable;
+	}
+
+	/**
+	 *
+	 * Give a custom or a dynamic variable
+	 * See full list at https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
+	 *
+	 * @example {{user_name}}
+	 * @example {{$randomExampleEmail}}
+	 *
+	 * @param mixed $variable
+	 */
+	public function setVariable($variable)
+	{
+		// clean up and add the braces if they're not there
+		$variable = '{{' . trim($variable, " \t\n\r\0\x0B{}") . '}}';
+
+		$this->variable = trim($variable);
+
+		return $this;
+	}
 }

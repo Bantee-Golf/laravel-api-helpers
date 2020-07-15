@@ -4,6 +4,7 @@ namespace EMedia\Api\Domain\FileGenerators;
 use EMedia\Api\Exceptions\FileGenerationFailedException;
 use EMedia\PHPHelpers\Files\DirManager;
 use Illuminate\Contracts\Filesystem\FileExistsException;
+use Symfony\Component\Yaml\Yaml;
 
 abstract class BaseFileGenerator
 {
@@ -29,6 +30,21 @@ abstract class BaseFileGenerator
 
 	/**
 	 *
+	 * Append to a schema array
+	 *
+	 * @param $key
+	 * @param $value
+	 * @return $this
+	 */
+	public function appendToSchemaArray($key, $value)
+	{
+		$this->schema[$key][] = $value;
+
+		return $this;
+	}
+
+	/**
+	 *
 	 * Write generated output to a JSON file
 	 *
 	 * @param $outputFilePath
@@ -38,7 +54,7 @@ abstract class BaseFileGenerator
 	 * @throws FileGenerationFailedException
 	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
 	 */
-	public function writeOutputFile($outputFilePath, $overwrite = true)
+	public function writeOutputFileJson($outputFilePath, $overwrite = true)
 	{
 		if (!$overwrite && file_exists($outputFilePath)) {
 			throw new FileExistsException("File {$outputFilePath} already exists.");
@@ -54,6 +70,37 @@ abstract class BaseFileGenerator
 		DirManager::makeDirectoryIfNotExists($outputDir);
 
 		file_put_contents($outputFilePath, $outputString);
+
+		return true;
+	}
+
+
+	/**
+	 *
+	 * Write generated output to a YAML file
+	 *
+	 * @param $outputFilePath
+	 * @param bool $overwrite
+	 * @return bool
+	 * @throws FileExistsException
+	 * @throws FileGenerationFailedException
+	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 */
+	public function writeOutputFileYaml($outputFilePath, $overwrite = true)
+	{
+		if (!$overwrite && file_exists($outputFilePath)) {
+			throw new FileExistsException("File {$outputFilePath} already exists.");
+		}
+
+		$outputDir = pathinfo($outputFilePath, PATHINFO_DIRNAME);
+		DirManager::makeDirectoryIfNotExists($outputDir);
+
+		try {
+			$yamlString = Yaml::dump($this->getOutput(), 10, 4, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE|Yaml::DUMP_OBJECT_AS_MAP);
+			file_put_contents($outputFilePath, $yamlString);
+		} catch (\Exception $ex) {
+			throw new FileGenerationFailedException("Failed to generate a valid output. " . $ex->getMessage());
+		}
 
 		return true;
 	}

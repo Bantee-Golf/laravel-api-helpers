@@ -315,13 +315,19 @@ class ModelDefinition
 
 		$reflect = new \ReflectionClass($class);
 
-		return [
+		$response = [
 			'name' => $reflect->getShortName(),
 			'definition' => [
 				'type' => 'object',
-				'properties' => $properties,
 			],
 		];
+
+		// empty properties are not allowed
+		if (count($properties) > 0) {
+			$response['definition']['properties'] = $properties;
+		}
+
+		return $response;
 	}
 
 

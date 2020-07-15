@@ -304,19 +304,67 @@ class APICall
 
 		return $this;
 	}
+
 	/**
 	 * @param array $headers
 	 */
 	public function setHeaders(array $headers)
 	{
 		foreach ($headers as $header) {
-			/** @var Param $header */
-			if ($header instanceof Param) {
-				$header->setLocation(Param::LOCATION_HEADER);
+			$this->addHeader($header);
+		}
+
+		return $this;
+	}
+
+	/**
+	 *
+	 * Add a header to headers list
+	 *
+	 * @param Param $param
+	 * @param bool $allowDuplicate
+	 * @return $this
+	 */
+	public function addHeader(Param $param, $allowDuplicate = false)
+	{
+		if ($param instanceof Param) {
+			$param->setLocation(Param::LOCATION_HEADER);
+		}
+
+		/** @var Param $header */
+		$isAdded = false;
+		if (!$allowDuplicate) {
+			foreach ($this->headers as &$header) {
+				if ($header->getName() === $param->getName()) {
+					$header = $param;
+					$isAdded = true;
+				}
 			}
 		}
 
-		$this->headers = $headers;
+		if (!$isAdded) $this->headers[] = $param;
+
+		return $this;
+	}
+
+
+	/**
+	 *
+	 * Set only the API key header
+	 * This is just a helper method that clears the defaults and sets the `x-api-key` header
+	 *
+	 * @return $this
+	 */
+	public function requireApiKeyHeader()
+	{
+		$this->noDefaultHeaders();
+
+		$this->setHeaders([
+			(new Param('Accept', Param::TYPE_STRING, '`application/json`'))
+									->setDefaultValue(self::CONSUME_JSON),
+			(new Param('x-api-key', 'String', 'API Key'))
+									->setDefaultValue('{{x-api-key}}'),
+		]);
 
 		return $this;
 	}

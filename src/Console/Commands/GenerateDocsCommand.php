@@ -37,7 +37,9 @@ class GenerateDocsCommand extends Command
 	 * @var string
 	 */
 	protected $signature = 'generate:docs
-								{--user-id=3 : Default user ID to access the API}';
+								{--user-id=3 : Default user ID to access the API}
+								{--user-pass=12345678 : Default user password to test the API}
+								';
 
 	/**
 	 * The console command description.
@@ -67,6 +69,8 @@ class GenerateDocsCommand extends Command
 	protected $modelDefinitionNames = [];
 
 	protected $docsFolder;
+
+	protected $createdFiles = [];
 
 	/**
 	 * Create a new command instance.
@@ -106,6 +110,7 @@ class GenerateDocsCommand extends Command
 			$this->createSwaggerJson('api');
 			$this->createSwaggerJson('postman');
 
+			$this->table(['Generated File', 'Path'], $this->createdFiles);
 			$this->info('');
 			$this->info('To complete, run `apidoc -i resources/docs -o public_html/docs/api`');
 
@@ -240,6 +245,10 @@ class GenerateDocsCommand extends Command
 		}
 	}
 
+	protected function getOutputFilePath($fileName)
+	{
+		return $this->docsFolder . DIRECTORY_SEPARATOR . $fileName;
+	}
 
 	/**
 	 *
@@ -253,14 +262,7 @@ class GenerateDocsCommand extends Command
 			throw new \InvalidArgumentException("The given type $type is an invalid argument");
 		}
 
-		if ($type === 'postman') {
-			$fileName = 'postman_collection.json';
-		} else {
-			$fileName = 'swagger.json';
-		}
-
 		$items = $this->docBuilder->getApiCalls();
-		$outputPath = $this->docsFolder . DIRECTORY_SEPARATOR . $fileName;
 
 		// TODO: don't hardcode the version
 		$basePath = '/api/v1';
@@ -312,11 +314,13 @@ class GenerateDocsCommand extends Command
 					if (in_array($fieldName, ['x-api-key', 'x-access-token'])) {
 						if ($fieldName === 'x-api-key') {
 							$securityDefinitions[] = ['apiKey' => []];
-							if ($type === 'api') continue;
+							// if ($type === 'api')
+							continue;
 						}
 						if ($fieldName === 'x-access-token') {
 							$securityDefinitions[] = ['accessToken' => []];
-							if ($type === 'api') continue;
+							// if ($type === 'api')
+							continue;
 						}
 					}
 				}
@@ -353,9 +357,9 @@ class GenerateDocsCommand extends Command
 				}
 
 				// if `produces` is the same, we don't have to set the header again
-				if ($name === 'Accept' && $param->getDefaultValue() === 'application/json') {
-					continue;
-				}
+				// if ($name === 'Accept' && $param->getDefaultValue() === 'application/json') {
+				//	continue;
+				// }
 
 				$location = $param->getLocation();
 				if ($location === null) {
@@ -381,6 +385,31 @@ class GenerateDocsCommand extends Command
 						'type'        => strtolower($dataType),
 						// 'schema'      => [],
 					];
+
+					// set the variable slots for postman
+					if ($type === 'postman')
+					{
+						$variable = (string)$param->getVariable();
+						if (empty($variable)) {
+							$variable = $param->getDefaultValue();
+						}
+						if (empty($variable)) {
+							$variable = $param->getExample();
+						}
+
+						if (!empty($variable))
+						{
+							if ($location === Param::LOCATION_FORM)
+							{
+								$paramData['example'] = $variable;
+							}
+							else
+							{
+								$paramData['schema']['type'] = strtolower($dataType);
+								$paramData['schema']['example'] = $variable;
+							}
+						}
+					}
 				}
 
 				$parameters[] = $paramData;
@@ -393,7 +422,9 @@ class GenerateDocsCommand extends Command
 
 			$consumes = $item->getConsumes();
 			if (empty($consumes)) {
+				$consumes[] = APICall::CONSUME_JSON;
 				$consumes[] = APICall::CONSUME_FORM_URLENCODED;
+				// $consumes[] = APICall::CONSUME_MULTIPART_FORM;
 			}
 
 			// build success responses
@@ -465,22 +496,48 @@ class GenerateDocsCommand extends Command
 
 		$swaggerConfig->addToSchema('definitions', $allDefinitions);
 
+
+
 		if ($type === 'postman') {
-			$swaggerConfig->setHost('{{host}}');
-			$swaggerConfig->setSchemes(['{{scheme}}']);
+
 			$this->writePostmanEnvironments($postmanEnvironment);
+
+			// create postman collection JSON file
+			// $outputPath = $this->getOutputFilePath('postman_collection.json');
+			// $swaggerConfig->writeOutputFileJson($outputPath);
+
+			$postmanCollection = new PostmanCollectionBuilder();
+			$postmanCollection->setSchema($swaggerConfig->getSchema());
+			$outputPath = $this->getOutputFilePath('postman_collection.json');
+			$postmanCollection->writeOutputFileJson($outputPath);
+			$this->createdFiles[] = ['Postman Collection (JSON)', $this->stripBasePath($outputPath)];
+
+
 		} else {
+
 			// if there is a sandbox URL, we should use that as the host
 			if (getenv('APP_SANDBOX_URL') !== false) {
 				$swaggerConfig->setServerUrl(getenv('APP_SANDBOX_URL'));
 				$swaggerConfig->setSchemes(['http', 'https']);
 			}
+
+			// create OpenAPI v3 YAML file
+			// $outputPath = $this->getOutputFilePath('open-api-v3.yml');
+			// $openApi->writeOutputFileYaml($outputPath);
+			// $this->createdFiles[] = ['OpenAPI v3 (YAML)', $this->stripBasePath($outputPath)];
+
+			// create swagger YAML file
+			$outputPath = $this->getOutputFilePath('swagger.yml');
+			$swaggerConfig->writeOutputFileYaml($outputPath);
+			$this->createdFiles[] = ['Swagger v2 (YAML)', $this->stripBasePath($outputPath)];
+
+			// create swagger JSON file
+			$outputPath = $this->getOutputFilePath('swagger.json');
+			$swaggerConfig->writeOutputFileJson($outputPath);
+			$this->createdFiles[] = ['Swagger v2 (JSON)', $this->stripBasePath($outputPath)];
+
 		}
-
-		$swaggerConfig->writeOutputFile($outputPath);
-		$this->info("Generated File - {$this->stripBasePpath($outputPath)}");
 	}
-
 
 
 	/**
@@ -494,6 +551,9 @@ class GenerateDocsCommand extends Command
 	 */
 	protected function writePostmanEnvironments(PostmanEnvironment $postmanEnvironment)
 	{
+		$postmanEnvironment->addVariable('default_user_login_email', $this->user->email);
+		$postmanEnvironment->addVariable('default_user_login_pass', $this->option('user-pass'));
+
 		// Generate Local Environment Config
 		if (getenv('APP_ENV') === 'local') {
 			$filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_local.json';
@@ -502,10 +562,14 @@ class GenerateDocsCommand extends Command
 
 			if (getenv('API_KEY') !== false) {
 				$postmanEnvironment->addVariable('x-api-key', getenv('API_KEY'));
+				$postmanEnvironment->addVariable('x-access-token', $this->getDefaultUserAccessToken());
 			}
 
-			$postmanEnvironment->writeOutputFile($filePath);
-			$this->info("Postman Local Environment Generated - `{$this->stripBasePpath($filePath)}`");
+			$postmanEnvironment->writeOutputFileJson($filePath);
+			$this->createdFiles[] = ['Postman Environment (LOCAL)', $this->stripBasePath($filePath)];
+
+			// remove the variables after done
+			$postmanEnvironment->removeVariable('x-access-token');
 		} else {
 			$this->error("Failed to create Local Environment file. Run this on a `local` environment.");
 		}
@@ -525,9 +589,11 @@ class GenerateDocsCommand extends Command
 				$postmanEnvironment->addVariable('x-api-key', getenv('APP_SANDBOX_API_KEY'));
 			}
 
-			$postmanEnvironment->writeOutputFile($filePath);
-			$this->info("Postman Sandbox Environment Generated - `{$this->stripBasePpath($filePath)}`");
+			$postmanEnvironment->writeOutputFileJson($filePath);
+			$this->createdFiles[] = ['Postman Environment (SANDBOX)', $this->stripBasePath($filePath)];
 		}
+
+		$this->createdFiles[] = ['---', '---'];
 	}
 
 	/**
@@ -561,7 +627,8 @@ class GenerateDocsCommand extends Command
 			file_put_contents($outputPath, implode("\r\n", $lines), FILE_APPEND);
 		}
 
-		$this->info("File(s) generated at {$docsFolder}");
+		$this->createdFiles[] = ['APIDoc Files', $this->stripBasePath($docsFolder)];
+		$this->createdFiles[] = ['---', '---'];
 	}
 
 	/**
@@ -595,14 +662,7 @@ class GenerateDocsCommand extends Command
 		}
 
 		$request->headers->set('x-api-key', $apiKey);
-		if ($this->user) {
-			$accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($this->user->id);
-			if (empty($accessToken)) {
-				$this->error("An access token not found for user ID {$this->user->id}");
-			} else {
-				$request->headers->set('x-access-token', $accessToken);
-			}
-		}
+		$request->headers->set('x-access-token', $this->getDefaultUserAccessToken());
 
 		/** @var Response $response */
 		/** @var Kernel $kernel */
@@ -612,6 +672,26 @@ class GenerateDocsCommand extends Command
 			throw $response->exception;
 		}
 	}
+
+	/**
+	 *
+	 * Get an access-token for this user for API test
+	 *
+	 * @return mixed
+	 */
+	protected function getDefaultUserAccessToken()
+	{
+		if ($this->user) {
+			$accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($this->user->id);
+			if ($accessToken) {
+				return $accessToken;
+			}
+
+			$this->error("An access token not found for user ID {$this->user->id}");
+
+		}
+	}
+
 
 	/**
 	 * Get the route information for a given route.
@@ -656,7 +736,7 @@ class GenerateDocsCommand extends Command
 		})->implode(',');
 	}
 
-	protected function stripBasePpath($path)
+	protected function stripBasePath($path)
 	{
 		return str_replace(base_path(), '', $path);
 	}
