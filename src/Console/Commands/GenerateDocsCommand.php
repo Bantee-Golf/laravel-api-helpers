@@ -37,8 +37,9 @@ class GenerateDocsCommand extends Command
 	 * @var string
 	 */
 	protected $signature = 'generate:docs
-								{--user-id=3 : Default user ID to access the API}
-								{--user-pass=12345678 : Default user password to test the API}
+								{--login-user-id=3 : User ID to access login of API}
+								{--login-user-pass=12345678 : Password for the Login User}
+								{--test-user-id=4 : User ID of the test user}
 								';
 
 	/**
@@ -64,7 +65,8 @@ class GenerateDocsCommand extends Command
 
 	protected $docBuilder;
 
-	protected $user;
+	protected $loginUser;
+	protected $testUser;
 
 	protected $modelDefinitionNames = [];
 
@@ -142,14 +144,22 @@ class GenerateDocsCommand extends Command
 			return false;
 		}
 
-		// get the default user
-		$user = (app(UsersRepository::class))->find($this->option('user-id'));
-
-		if (!$user) {
-			$this->error('A user with an ID of ' . $this->option('user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--user-id` option.');
+		// get the test user
+		$testUser = (app(UsersRepository::class))->find($this->option('test-user-id'));
+		if (!$testUser) {
+			$this->error('A user with an ID of ' . $this->option('test-user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--test-user-id` option.');
 			return false;
 		}
-		$this->user = $user;
+		$this->testUser = $testUser;
+
+		// you need a separate user to test logins
+		// because after you login, the `x-access-token` will reset
+		$loginUser = (app(UsersRepository::class))->find($this->option('login-user-id'));
+		if (!$loginUser) {
+			$this->error('A user with an ID of ' . $this->option('login-user-id') . ' is not found. Ensure this user exists on database or provide a new user user with the `--login-user-id` option.');
+			return false;
+		}
+		$this->loginUser = $loginUser;
 
 		if (is_countable($this->routes) && count($this->routes) === 0) {
 			$this->error("Your application doesn't have any routes.");
@@ -551,8 +561,10 @@ class GenerateDocsCommand extends Command
 	 */
 	protected function writePostmanEnvironments(PostmanEnvironment $postmanEnvironment)
 	{
-		$postmanEnvironment->addVariable('default_user_login_email', $this->user->email);
-		$postmanEnvironment->addVariable('default_user_login_pass', $this->option('user-pass'));
+		$postmanEnvironment->addVariable('login_user_email', $this->loginUser->email);
+		$postmanEnvironment->addVariable('login_user_pass', $this->option('login-user-pass'));
+
+		$postmanEnvironment->addVariable('test_user_email', $this->testUser->email);
 
 		// Generate Local Environment Config
 		if (getenv('APP_ENV') === 'local') {
@@ -681,14 +693,13 @@ class GenerateDocsCommand extends Command
 	 */
 	protected function getDefaultUserAccessToken()
 	{
-		if ($this->user) {
-			$accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($this->user->id);
+		if ($this->testUser) {
+			$accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($this->testUser->id);
 			if ($accessToken) {
 				return $accessToken;
 			}
 
-			$this->error("An access token not found for user ID {$this->user->id}");
-
+			throw new \InvalidArgumentException("An access token not found for user with ID {$this->testUser->id}. Assign at least 1 device to this user. Look at your `DevicesTableSeeder` file.");
 		}
 	}
 

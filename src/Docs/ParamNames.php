@@ -15,4 +15,8 @@ class ParamNames
 		self::X_ACCESS_TOKEN,
 	];
 
+	public const ROOT_LEVEL_SECURITY_PARAMS = [
+		self::X_API_KEY,
+	];
+
 }
