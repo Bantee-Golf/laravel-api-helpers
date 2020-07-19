@@ -3,39 +3,33 @@
 
 namespace EMedia\Api\Domain\Traits;
 
-
 trait HasAttributes
 {
+    protected $attributes;
 
-	protected $attributes;
+    public function __set($name, $value)
+    {
+        $this->attributes[$name] = $value;
 
-	public function __set($name, $value)
-	{
+        return $this;
+    }
 
-		$this->attributes[$name] = $value;
+    public function __get($name)
+    {
+        if (!array_key_exists($name, $this->attributes)) {
+            return null;
+        }
 
-		return $this;
-	}
+        return $this->attributes[$name];
+    }
 
-	public function __get($name)
-	{
-		if (!array_key_exists($name, $this->attributes))
-		{
-			return null;
-		}
+    public function __isset($name)
+    {
+        return isset($this->attributes[$name]);
+    }
 
-		return $this->attributes[$name];
-	}
-
-	public function __isset($name)
-	{
-		return isset($this->attributes[$name]);
-	}
-
-	public function __unset($name)
-	{
-		unset($this->attributes[$name]);
-	}
-
-
+    public function __unset($name)
+    {
+        unset($this->attributes[$name]);
+    }
 }
