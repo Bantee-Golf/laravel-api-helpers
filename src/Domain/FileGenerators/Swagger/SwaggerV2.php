@@ -3,13 +3,7 @@
 
 namespace EMedia\Api\Domain\FileGenerators\Swagger;
 
-
 use EMedia\Api\Domain\FileGenerators\BaseFileGenerator;
-use EMedia\Api\Domain\FileGenerators\Postman\PostmanEnvironment;
-use EMedia\Api\Exceptions\FileGenerationFailedException;
-use EMedia\PHPHelpers\Files\DirManager;
-use Illuminate\Contracts\Filesystem\FileExistsException;
-use Illuminate\Support\Collection;
 
 class SwaggerV2 extends BaseFileGenerator
 {
@@ -31,7 +25,7 @@ class SwaggerV2 extends BaseFileGenerator
 		return [
 			'swagger' => '2.0',
 			'info' => [
-				'title' => config('app.name') . ' Backend API',
+				'title' => config('app.name') . ' API',
 				// 'description' => 'The description',
 				'version' => '1.0.0.' . date('Ymd'),
 			],
@@ -44,6 +38,7 @@ class SwaggerV2 extends BaseFileGenerator
 					'type' => 'apiKey',
 					'name' => 'x-api-key',
 					'in' => 'header',
+					'description' => 'API Key for application',
 				],
 				'accessToken' => [
 					'type' => 'apiKey',

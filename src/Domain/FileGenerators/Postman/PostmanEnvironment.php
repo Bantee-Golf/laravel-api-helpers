@@ -40,7 +40,7 @@ class PostmanEnvironment extends BaseFileGenerator
 
 	/**
 	 *
-	 * Set the Server URL for OpenApi 3 Spec
+	 * Set the Server URL as per Spec
 	 *
 	 * @example https://api.example.com
 	 * @example https://api.example.com/v1

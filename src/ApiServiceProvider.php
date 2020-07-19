@@ -1,7 +1,9 @@
 <?php
 namespace EMedia\Api;
 
+use EMedia\Api\Console\Commands\GenerateDocsTestsCommand;
 use EMedia\Api\Console\Commands\GenerateDocsCommand;
+use EMedia\Api\Console\Commands\GenerateApiTestsCommand;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +23,8 @@ class ApiServiceProvider extends ServiceProvider
 			$this->app->singleton('emedia.api.builder', \EMedia\Api\Docs\DocBuilder::class);
 
 			$this->commands(GenerateDocsCommand::class);
+			$this->commands(GenerateDocsTestsCommand::class);
+			$this->commands(GenerateApiTestsCommand::class);
 		}
 
 		$this->registerCustomResponses();

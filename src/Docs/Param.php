@@ -9,6 +9,7 @@ use Illuminate\Contracts\Support\Arrayable;
 class Param implements Arrayable, \JsonSerializable
 {
 
+	// Parameter Locations
 	public const LOCATION_HEADER 	= 'header';
 	public const LOCATION_FORM 		= 'formData';
 	public const LOCATION_COOKIE 	= 'cookie';
@@ -16,7 +17,13 @@ class Param implements Arrayable, \JsonSerializable
 	public const LOCATION_QUERY 	= 'query';
 	public const LOCATION_BODY 		= 'body';
 
+	// Data Types
 	public const TYPE_STRING = 'string';
+	public const TYPE_INT	 = 'integer';
+	public const TYPE_NUMBER = 'number';
+	public const TYPE_FLOAT  = 'number';
+	public const TYPE_DOUBLE = 'number';
+	public const TYPE_BOOLEAN = 'boolean';
 
 	protected $fieldName;
 	protected $required = true;
@@ -39,6 +46,28 @@ class Param implements Arrayable, \JsonSerializable
 		} else {
 			$this->description = $description;
 		}
+	}
+
+	public static function getParamLocations()
+	{
+		return [
+			self::LOCATION_HEADER,
+			self::LOCATION_PATH,
+			self::LOCATION_QUERY,
+			self::LOCATION_FORM,
+		];
+	}
+
+	public static function getDataTypes()
+	{
+		return [
+			self::TYPE_STRING,
+			self::TYPE_INT,
+			self::TYPE_NUMBER,
+			self::TYPE_FLOAT,
+			self::TYPE_DOUBLE,
+			self::TYPE_BOOLEAN,
+		];
 	}
 
 	/**
@@ -290,6 +319,26 @@ class Param implements Arrayable, \JsonSerializable
 
 		$this->variable = trim($variable);
 
+		return $this;
+	}
+
+	/**
+	 * @param string $dataType
+	 */
+	public function setDataType(string $dataType): Param
+	{
+		$this->dataType = $dataType;
+
+		return $this;
+	}
+
+	/**
+	 * @param string|null $description
+	 * @return Param
+	 */
+	public function setDescription(?string $description): Param
+	{
+		$this->description = $description;
 		return $this;
 	}
 }

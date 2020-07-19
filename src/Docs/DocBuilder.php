@@ -18,6 +18,11 @@ class DocBuilder
 		$this->apiCalls = new Collection();
 	}
 
+	public function reset()
+	{
+		$this->apiCalls = new Collection();
+	}
+
 	/**
 	 *
 	 * Register an API Call with the Doc Builder

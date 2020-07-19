@@ -1,19 +1,40 @@
 # Change Log
 
-## Version 2.1.1
+## Version Compatibility
+
+Use versions as below.
+
+| Laravel Version | Api Helpers Version      |
+| --------------- |:------------------------:|
+| 7               | 3.1.x                    |
+| 6               | 3.0.x                    |
+| 5.7             | 2.1.x                    |
+
+## v3.2
+- New commands added `generate:tests`, `generate:docs-tests`
+- Parameters can now be passed as strings to APICall
+- Auto configured Postman environments for local and sandboxes
+- Postman dynamic variable support
+- API responses auto fetched and stored from tests
+- Auto-generated API Tests
+
+## v3
+- Laravel 7 Support
+
+## v2.1.1
 - Added auto generated model definitions 
 - Prevent running the command in production env.
 - Fix null description and query param.
 - Allow user to customise consume param on APICall
 
-## Version 2.1
+## v2.1
 - Changed `ApiSuccessPaginated` to split the pagination data.
 - Documentation builder changed to create swagger and postman files separately.
 - Fixed swagger syntax 
 
-## Version 2.0
+## v2.0
 - Added documentation builder
 
-## Version 1.1.0
+## v1.1.0
 - Changed `data` to `payload`
 - Fixed controller trait to handle `ValidationException` for json.

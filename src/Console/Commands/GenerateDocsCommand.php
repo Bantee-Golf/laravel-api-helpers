@@ -3,33 +3,37 @@
 
 namespace EMedia\Api\Console\Commands;
 
-
 use App\Entities\Auth\UsersRepository;
-use App\Entities\Files\File;
-use App\Http\Kernel;
-use Closure;
 use EMedia\Api\Docs\APICall;
 use EMedia\Api\Docs\Param;
 use EMedia\Api\Docs\ParamType;
+use EMedia\Api\Domain\FileGenerators\OpenApi\V3\OpenApiSchema;
+use EMedia\Api\Domain\FileGenerators\Postman\PostmanCollectionBuilder;
 use EMedia\Api\Domain\FileGenerators\Postman\PostmanEnvironment;
 use EMedia\Api\Domain\FileGenerators\Swagger\SwaggerV2;
+use EMedia\Api\Domain\FileGenerators\Transformers\APICallTransformer;
 use EMedia\Api\Domain\ModelDefinition;
+use EMedia\Api\Domain\Traits\NamesAndPathLocations;
+use EMedia\Api\Domain\Vendors\ApiDoc;
 use EMedia\Api\Exceptions\APICallsNotDefinedException;
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
 use EMedia\Api\Exceptions\UndocumentedAPIException;
-use EMedia\Devices\Auth\DeviceAuthenticator;
 use EMedia\PHPHelpers\Files\DirManager;
 use Illuminate\Console\Command;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
-use Request;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class GenerateDocsCommand extends Command
 {
+
+
+	use NamesAndPathLocations;
 
 	/**
 	 * The name and signature of the console command.
@@ -40,6 +44,9 @@ class GenerateDocsCommand extends Command
 								{--login-user-id=3 : User ID to access login of API}
 								{--login-user-pass=12345678 : Password for the Login User}
 								{--test-user-id=4 : User ID of the test user}
+								{--no-apidoc : Do not run api docs}
+								{--no-files-output : Do not show generated files}
+								{--reset : Reset and start a new instance}
 								';
 
 	/**
@@ -47,7 +54,7 @@ class GenerateDocsCommand extends Command
 	 *
 	 * @var string
 	 */
-	protected $description = 'Generate API documentation';
+	protected $description = 'Generate API Documentation';
 
 	/**
 	 * The router instance.
@@ -105,6 +112,12 @@ class GenerateDocsCommand extends Command
 		putenv('DOCUMENTATION_MODE=true');
 		$this->docBuilder = app('emedia.api.builder');
 
+		// reset and start again
+		if ($this->option('reset')) {
+			$this->docBuilder->reset();
+			$this->createdFiles = [];
+		}
+
 		$this->defineDefaultHeaders();
 		try {
 			$this->hitRoutesAndLoadDocs();
@@ -112,14 +125,28 @@ class GenerateDocsCommand extends Command
 			$this->createSwaggerJson('api');
 			$this->createSwaggerJson('postman');
 
-			$this->table(['Generated File', 'Path'], $this->createdFiles);
-			$this->info('');
-			$this->info('To complete, run `apidoc -i resources/docs -o public_html/docs/api`');
+			if (!$this->option('no-files-output')) {
+				$this->table(['Generated File', 'Path'], $this->createdFiles);
+				$this->info('');
+			}
+
+			if (!$this->option('no-apidoc')) {
+				if (ApiDoc::isInstalled()) {
+					try {
+						$process = ApiDoc::compile();
+						$this->info($process->getOutput());
+						$this->info('ApiDoc compiled. Done.');
+					} catch (ProcessFailedException $e) {
+						$this->error($e->getMessage());
+						$this->error("ApiDoc generation failed. Try running it manually.");
+					}
+				}
+			}
 
 		} catch (UndocumentedAPIException $ex) {
 			$this->error($ex->getMessage());
 		} catch (APICallsNotDefinedException $ex) {
-			$this->error('No APICalls defined. Defined the APICalls before trying to generate the documents again. Aborting...');
+			$this->error('No APICalls found on controllers. Add APICalls with document() functions before trying again. Aborting...');
 		} catch (\BadMethodCallException $ex) {
 			// Exception caught earlier, nothing to do here
 		} catch (MethodNotAllowedHttpException $ex) {
@@ -463,6 +490,9 @@ class GenerateDocsCommand extends Command
 				$responseObjectName = 'SuccessResponse';
 			}
 
+			logfile($parameters, 'v2-parameters.json');
+			logfile($securityDefinitions, 'v2-security.json');
+
 			$pathData = [
 				'tags' => [
 					$item->getGroup(),
@@ -470,7 +500,8 @@ class GenerateDocsCommand extends Command
 				'summary' => $item->getName(),
 				'consumes' => $consumes,
 				'produces' => ['application/json'],
-				'description' => ($item->getDescription() === null)? '' : $item->getDescription(),
+				'operationId' => $item->getOperationId(),
+				'description' => $item->getDescription() ?? '',
 				'parameters' => $parameters,
 				'security' => $securityDefinitions,
 				'responses' => [
@@ -506,22 +537,20 @@ class GenerateDocsCommand extends Command
 
 		$swaggerConfig->addToSchema('definitions', $allDefinitions);
 
-
-
 		if ($type === 'postman') {
 
 			$this->writePostmanEnvironments($postmanEnvironment);
 
 			// create postman collection JSON file
-			// $outputPath = $this->getOutputFilePath('postman_collection.json');
-			// $swaggerConfig->writeOutputFileJson($outputPath);
+			$outputPath = $this->getOutputFilePath('postman_collection.json');
+			$swaggerConfig->writeOutputFileJson($outputPath);
+			$this->createdFiles[] = ['Postman Collection (JSON)', $this->stripBasePath($outputPath)];
 
 			$postmanCollection = new PostmanCollectionBuilder();
 			$postmanCollection->setSchema($swaggerConfig->getSchema());
-			$outputPath = $this->getOutputFilePath('postman_collection.json');
-			$postmanCollection->writeOutputFileJson($outputPath);
-			$this->createdFiles[] = ['Postman Collection (JSON)', $this->stripBasePath($outputPath)];
-
+			$outputPath = $this->getOutputFilePath('postman_collection.yml');
+			$postmanCollection->writeOutputFileYaml($outputPath);
+			$this->createdFiles[] = ['Postman Collection (YAML)', $this->stripBasePath($outputPath)];
 
 		} else {
 
@@ -530,11 +559,6 @@ class GenerateDocsCommand extends Command
 				$swaggerConfig->setServerUrl(getenv('APP_SANDBOX_URL'));
 				$swaggerConfig->setSchemes(['http', 'https']);
 			}
-
-			// create OpenAPI v3 YAML file
-			// $outputPath = $this->getOutputFilePath('open-api-v3.yml');
-			// $openApi->writeOutputFileYaml($outputPath);
-			// $this->createdFiles[] = ['OpenAPI v3 (YAML)', $this->stripBasePath($outputPath)];
 
 			// create swagger YAML file
 			$outputPath = $this->getOutputFilePath('swagger.yml');
@@ -545,7 +569,6 @@ class GenerateDocsCommand extends Command
 			$outputPath = $this->getOutputFilePath('swagger.json');
 			$swaggerConfig->writeOutputFileJson($outputPath);
 			$this->createdFiles[] = ['Swagger v2 (JSON)', $this->stripBasePath($outputPath)];
-
 		}
 	}
 
@@ -618,10 +641,9 @@ class GenerateDocsCommand extends Command
 	{
 		$items = $this->docBuilder->getApiCalls();
 
-		$docsFolder = resource_path('docs/auto_generated');
-		DirManager::makeDirectoryIfNotExists($docsFolder);
+		$docsFolder = self::getApiDocsAutoGenDir(true);
 
-		$this->deleteFilesInDirectory($docsFolder, 'coffee');
+		self::deleteFilesInDirectory($docsFolder, 'coffee');
 
 		foreach ($items as $item) {
 			/** @var APICall $item */
@@ -629,11 +651,11 @@ class GenerateDocsCommand extends Command
 			$outputPath = $docsFolder . DIRECTORY_SEPARATOR . $outputFile;
 
 			$lines = [];
-			$lines[] = "# ************************************************* #";
-			$lines[] = "#       AUTO-GENERATED. DO NOT EDIT THIS FILE.      #";
-			$lines[] = "# ************************************************* #";
-			$lines[] = "#    Create your files in `resources/docs/manual`   #";
-			$lines[] = "# ************************************************* #";
+			$lines[] = "# ******************************************************** #";
+			$lines[] = "#           AUTO-GENERATED. DO NOT EDIT THIS FILE.         #";
+			$lines[] = "# ******************************************************** #";
+			$lines[] = "#    Create your files in `resources/docs/apidoc/manual`   #";
+			$lines[] = "# ******************************************************** #";
 			$lines[] = $item->getApiDoc();
 			$lines[] = '';
 			file_put_contents($outputPath, implode("\r\n", $lines), FILE_APPEND);
@@ -641,18 +663,6 @@ class GenerateDocsCommand extends Command
 
 		$this->createdFiles[] = ['APIDoc Files', $this->stripBasePath($docsFolder)];
 		$this->createdFiles[] = ['---', '---'];
-	}
-
-	/**
-	 *
-	 * Delete old files
-	 *
-	 * @param $dirPath
-	 * @param $fileExtension
-	 */
-	protected function deleteFilesInDirectory($dirPath, $fileExtension)
-	{
-		array_map('unlink', glob("$dirPath/*.$fileExtension"));
 	}
 
 
@@ -677,8 +687,8 @@ class GenerateDocsCommand extends Command
 		$request->headers->set('x-access-token', $this->getDefaultUserAccessToken());
 
 		/** @var Response $response */
-		/** @var Kernel $kernel */
-		$kernel = app()['Illuminate\Contracts\Http\Kernel'];
+		/** @var \Illuminate\Contracts\Http\Kernel $kernel */
+		$kernel = app()[\Illuminate\Contracts\Http\Kernel::class];
 		$response = $kernel->handle($request);
 		if ($response->exception) {
 			throw $response->exception;
@@ -694,7 +704,7 @@ class GenerateDocsCommand extends Command
 	protected function getDefaultUserAccessToken()
 	{
 		if ($this->testUser) {
-			$accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($this->testUser->id);
+			$accessToken = \EMedia\Devices\Auth\DeviceAuthenticator::getAnAccessTokenForUserId($this->testUser->id);
 			if ($accessToken) {
 				return $accessToken;
 			}
@@ -721,6 +731,11 @@ class GenerateDocsCommand extends Command
 			}
 		}
 
+//		if ($route->uri() === 'api/v1/notifications/{uuid}/mark-read') {
+//			$p = $route->parameterNames();
+//			dd($p);
+//		}
+
 		return [
 			'host'   => $route->domain(),
 			'method' => $method,
@@ -731,6 +746,7 @@ class GenerateDocsCommand extends Command
 			'action' => ltrim($route->getActionName(), '\\'),
 			'middleware' => $this->getMiddleware($route),
 			// 'controller' => $route->getController(),
+			'parameter_names' => $route->parameterNames(),
 		];
 	}
 
@@ -751,4 +767,5 @@ class GenerateDocsCommand extends Command
 	{
 		return str_replace(base_path(), '', $path);
 	}
+
 }

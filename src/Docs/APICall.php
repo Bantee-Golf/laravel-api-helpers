@@ -4,10 +4,14 @@
 namespace EMedia\Api\Docs;
 
 
+use EMedia\Api\Domain\Traits\NamesAndPathLocations;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class APICall
 {
+
+	use NamesAndPathLocations;
 
 	const CONSUME_JSON = 'application/json';
 	const CONSUME_MULTIPART_FORM = 'multipart/form-data';
@@ -36,6 +40,7 @@ class APICall
 	protected $errorExamples = [];
 	protected $successObject;
 	protected $successPaginatedObject;
+	protected $operationId;
 
 	protected $consumes = [];
 
@@ -130,6 +135,8 @@ class APICall
 			$lines[] = json_encode($requestExampleParams);
 		}
 
+		$this->addStoredApiResponses();
+
 		$successExamples = $this->successExamples;
 		foreach ($successExamples as $successExample) {
 			$lines[] = "@apiSuccessExample {json} Success-Response / HTTP {$successExample['statusCode']} {$successExample['message']}";
@@ -147,6 +154,56 @@ class APICall
 		return implode("\r\n", $lines);
 	}
 
+	protected function addStoredApiResponses()
+	{
+		// if there are no responses, see if we have saved examples
+		if (empty($this->successExamples)) {
+			$responses = $this->getStoredApiResponses();
+
+			foreach ($responses as $code => $content) {
+				// all 2xx responses are taken as success responses
+				if (strpos($code, '2') === 0) {
+					$this->setSuccessExample($content, $code);
+				} else {
+					$this->setErrorExample($content, $code);
+				}
+			}
+		}
+	}
+
+	protected function getStoredApiResponses()
+	{
+		$response = [];
+		$processedFileNames = [];
+
+		// get files matching this operationId
+		// files names will look like `auth_post_login_200.json`, `auth_post_login_422.json`
+
+		$dirPath = self::getApiResponsesManualDir();
+		$manualFiles = glob($dirPath . DIRECTORY_SEPARATOR . $this->getOperationId() . '_*');
+
+		$dirPath = self::getApiResponsesAutoGenDir();
+		$autoGenFiles = glob($dirPath . DIRECTORY_SEPARATOR . $this->getOperationId() . '_*');
+
+		// if there's a file in manual folder, take that and ignore others
+		foreach (array_merge($manualFiles, $autoGenFiles) as $file) {
+			$fileName = pathinfo($file, PATHINFO_FILENAME);
+
+			if (in_array($fileName, $processedFileNames)) {
+				continue;
+			}
+			$processedFileNames[] = $fileName;
+
+			// split operationID and status code
+			// (auth_post_login)_(422)
+			preg_match('/(.*)_(\d*)/', $fileName, $matches);
+			if (count($matches) === 3) {
+				$response[$matches[2]] = file_get_contents($file);
+			}
+		}
+
+		return $response;
+	}
 
 	/**
 	 * @return mixed
@@ -177,9 +234,73 @@ class APICall
 	/**
 	 * @param mixed $params
 	 */
-	public function setParams($params)
+	public function setParams(array $params)
 	{
-		$this->params = $params;
+		$tempParams = [];
+
+		foreach ($params as $param) {
+
+			// parse strings
+			if (is_string($param)) {
+				$args = explode('|', $param);
+
+				if (!isset($args[0])) {
+					throw new \InvalidArgumentException("Invalid param value. You've given {$param}, and the format is incorrect.");
+				}
+				$param = new Param($args[0]);
+
+				// start from 1, because 0 is already handlded above
+				for ($i = 1, $iMax = count($args); $i < $iMax; $i++)
+				{
+					$arg = $args[$i];
+
+					// check for data types
+					if (in_array($arg, Param::getDataTypes())) {
+						$param->setDataType($arg);
+						continue;
+					}
+
+					// check other known values
+					switch ($arg) {
+						case 'required':
+							$param->required();
+							continue 2;
+						case 'optional':
+							$param->optional();
+							continue 2;
+					}
+
+					// check variables
+					if (strpos($arg, '{{') === 0) {
+						$param->setVariable($arg);
+					}
+
+					// other values
+					$argTypes = explode(':', $arg);
+					if (is_countable($argTypes) && count($argTypes) > 1) {
+						$type = $argTypes[0];
+						$arg  = $argTypes[1];
+
+						// if we have a function for that argument type, set it
+						$functionName = 'set' . Str::studly($type);
+						if (method_exists($param, $functionName)) {
+							$param->$functionName($arg);
+						} else {
+							// otherwise set as description
+							$param->setDescription($arg);
+						}
+					}
+				}
+			}
+
+			if (!$param instanceof Param) {
+				throw new \InvalidArgumentException("setParams can only accept Param objects or strings");
+			}
+
+			$tempParams[] = $param;
+		}
+
+		$this->params = $tempParams;
 
 		return $this;
 	}
@@ -355,7 +476,7 @@ class APICall
 	 *
 	 * @return $this
 	 */
-	public function requireApiKeyHeader()
+	public function setApiKeyHeader()
 	{
 		$this->noDefaultHeaders();
 
@@ -455,16 +576,17 @@ class APICall
 
 	/**
 	 *
-	 * @param array $successExamples
-	 *
+	 * @param string $successExample	Text for example
+	 * @param int $statusCode
+	 * @param null $statusMessage		HTTP message for the status code
 	 * @return APICall
 	 */
-	public function setSuccessExample($successExample, $statusCode = 200, $message = null): APICall
+	public function setSuccessExample($successExample, $statusCode = 200, $statusMessage = null): APICall
 	{
 		$this->successExamples[] = [
 			'text' => $successExample,
 			'statusCode' => $statusCode,
-			'message' => $this->getStatusTextByCode($statusCode, $message),
+			'message' => $this->getStatusTextByCode($statusCode, $statusMessage),
 		];
 
 		return $this;
@@ -559,6 +681,40 @@ class APICall
 	public function setSuccessPaginatedObject($successPaginatedObject)
 	{
 		$this->successPaginatedObject = $successPaginatedObject;
+
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getOperationId()
+	{
+		if (empty($this->operationId)) {
+			// build an operation ID
+			$name = [];
+			if (!empty($this->group)) 	$name[] = $this->group;
+			if (!empty($this->method)) 	$name[] = $this->method;
+			if (!empty($this->name)) 	$name[] = $this->name;
+			$name = implode('_', $name);
+
+			// if still nothing, create a random one
+			if (empty($name)) {
+				$name = Str::random(10);
+			}
+
+			$this->operationId = Str::snake(strtolower($name));
+		}
+
+		return $this->operationId;
+	}
+
+	/**
+	 * @param mixed $operationId
+	 */
+	public function setOperationId($operationId): APICall
+	{
+		$this->operationId = $operationId;
 
 		return $this;
 	}
