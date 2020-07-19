@@ -1,30 +1,32 @@
 <?php
 
 if (!function_exists('document')) {
-	/**
-	 *
-	 * Add a call to API documentation
-	 *
-	 * @param Closure $closure
-	 * @return boolean
-	 */
-	function document(Closure $closure)
-	{
-		if (!env('DOCUMENTATION_MODE', false)) return;
+    /**
+     *
+     * Add a call to API documentation
+     *
+     * @param Closure $closure
+     * @return boolean
+     */
+    function document(Closure $closure)
+    {
+        if (!env('DOCUMENTATION_MODE', false)) {
+            return;
+        }
 
-		$apiRequest = $closure();
+        $apiRequest = $closure();
 
-		/** @var \EMedia\Api\Docs\DocBuilder $docBuilder */
-		$docBuilder = app('emedia.api.builder');
+        /** @var \EMedia\Api\Docs\DocBuilder $docBuilder */
+        $docBuilder = app('emedia.api.builder');
 
-		/** @var \EMedia\Api\Docs\APICall $apiRequest */
-		$docBuilder->register($apiRequest);
+        /** @var \EMedia\Api\Docs\APICall $apiRequest */
+        $docBuilder->register($apiRequest);
 
 
-		if (env('DOCUMENTATION_MODE')) {
-			$docBuilder->throwDocumentationModeException();
-		}
+        if (env('DOCUMENTATION_MODE')) {
+            $docBuilder->throwDocumentationModeException();
+        }
 
-		return true;
-	}
+        return true;
+    }
 }

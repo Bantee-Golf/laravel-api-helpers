@@ -1,4 +1,4 @@
-# API Helpers for Laravel 6 and 7
+# API Helpers for Laravel
 
 This package adds the following.
 
@@ -19,15 +19,20 @@ Add the repository to `composer.json`
 composer require emedia/api
 ```
 
-The package will be auto-discovered.
+On your `.env` and `.env.example` files, add these values
+```
+APP_SANDBOX_URL=https://sandbox-project-url.preview.cx
+APP_SANDBOX_API_KEY="123-123-123-123"
+```
 
-Use versions as below.
+The package will be auto-discovered. For version compatibility with past Laravel versions, see `CHANGELOG.md`.
 
-| Laravel Version | Api Helpers Version      |
-| --------------- |:------------------------:|
-| 7               | 3.1.x                    |
-| 6               | 3.0.x                    |
-| 5.7             | 2.1.x                    |
+## System Requirements
+
+These must be available in your system before continuing.
+
+- [ApiDocs.js](http://apidocjs.com/)
+- [PHP CS Fixer](https://github.com/FriendsOfPHP/PHP-CS-Fixer)
 
 ## Usage
 
@@ -94,69 +99,95 @@ Returns (Unprocessable Entity - 422 by default)
 
 ## Documentation Builder
 
-You can use this package to auto-generate HTML API Specs, Swagger configurations and Postman API docs.
+You can use this package to auto-generate:
+- HTML API Specs
+- Swagger configurations 
+- Postman collections
+- Postman environments
 
 To allow auto-generation of docs, you need to call the `document()` function immidiately after the functions.
 
 For example, look at the `register()` method in `AuthController` below.
 
 ```
-	/**
-	 *
-	 * Sign up a user
-	 *
-	 * @param Request $request
-	 *
-	 * @return \Illuminate\Http\JsonResponse
-	 * @throws \Illuminate\Validation\ValidationException
-	 */
-	public function register(Request $request)
-	{
-		document(function () {
-			return (new APICall)->setName('Register')
-				->setParams([
-					(new Param('device_id', 'String', 'Unique ID of the device')),
-					(new Param('device_type', 'String', 'Type of the device `APPLE` or `ANDROID`')),
-					(new Param('device_push_token', 'String', 'Unique push token for the device'))->optional(),
+use EMedia\Api\Docs\APICall;
+use EMedia\Api\Docs\Param;
+use EMedia\Api\Domain\Postman\PostmanVar;
 
-					(new Param('first_name'))->setDefaultValue('Joe')->optional(),
-					(new Param('last_name'))->setDefaultValue('Johnson')->optional(),
-					(new Param('phone'))->optional(),
-					(new Param('email')),
+/**
+ *
+ * Sign up a user
+ *
+ * @param Request $request
+ *
+ * @return \Illuminate\Http\JsonResponse
+ * @throws \Illuminate\Validation\ValidationException
+ */
+public function register(Request $request)
+{
+    document(function () {
+        return (new APICall)
+            ->setName('Register')
+            ->setParams([
+                (new Param('device_id', 'string', 'Unique ID of the device')),
 
-					(new Param('password', 'string',
-						'Password. Must be at least 6 characters.'))->setDefaultValue('123456'),
-					(new Param('password_confirmation'))->setDefaultValue('123456'),
-				])
-				->noDefaultHeaders()
-				->setHeaders([
-					(new Param('Accept', 'String', '`application/json`'))->setDefaultValue('application/json'),
-					(new Param('x-api-key', 'String', 'API Key'))->setDefaultValue('123-123-123-123'),
-				])
-				->setSuccessObject(\App\User::class)
-				->setErrorExample('{
-					"message": "The email must be a valid email address.",
-					"payload": {
-						"errors": {
-							"email": [
-								"The email must be a valid email address."
-							]
-						}
-					},
-					"result": false
-				}', 422);
-		});
+                // define a parameter as a Param object
+                // (new Param('device_type', 'string', 'Type of the device `APPLE` or `ANDROID`')),
 
-		$this->validate($request, [
-			// add validation rules
-		]);
+                // or you can define it as a string
+                // the line below is the same as the one above
+                'device_type|string|Type of the device `APPLE` or `ANDROID`',
 
-		// add function logic
+                (new Param('device_push_token', 'String', 'Unique push token for the device'))->optional(),
 
-		// return a single object
-		$responseData = []
-		return response()->apiSuccess($responseData);
-	}
+                // you can set additional data within the string
+                // if a data type is not set, it will default to `string`
+                // the first item must be the field name. The order of other items doesn't matter
+                'first_name|{{$randomExampleEmail}}|example:Joe|optional',
+
+                (new Param('last_name'))->setDefaultValue('Johnson')->optional(),
+
+                // You can set Postman environment variables for parameters
+                // so they can be created dynamically when testing
+                // all fields below for the `phone` field does the same thing
+                'phone|optional|{{$randomPhoneNumber}}',
+                // 'phone|optional|variable:{{$randomPhoneNumber}}',
+                // 'phone|optional|variable:$randomPhoneNumber',
+                // (new Param('phone'))->optional()->setVariable('$randomPhoneNumber'),
+                // (new Param('phone'))->optional()->setVariable('{{$randomPhoneNumber}}'),
+                // (new Param('phone'))->optional()->setVariable(PostmanVar::PHONE),
+
+                (new Param('email'))->setVariable('{{$randomExampleEmail}}'),
+
+                (new Param('password', Param::TYPE_STRING,
+                    'Password. Must be at least 6 characters.'))->setDefaultValue('123456'),
+                (new Param('password_confirmation'))->setDefaultValue('123456'),
+            ])
+            ->setApiKeyHeader()
+            ->setSuccessObject(\App\User::class)
+            ->setErrorExample('{
+                "message": "The email must be a valid email address.",
+                "payload": {
+                    "errors": {
+                        "email": [
+                            "The email must be a valid email address."
+                        ]
+                    }
+                },
+                "result": false
+            }', 422);
+    });
+
+    $this->validate($request, [
+        // add validation rules
+    ]);
+
+    // add function logic
+
+    // return a single object
+    $responseData = []
+    return response()->apiSuccess($responseData);
+}
 ```
 
 The above example defines and returns a single object. If you want to return a paginated list of objects, use the pagination methods instead.
@@ -222,15 +253,16 @@ To fix above issue, You need to add `Custom Type Maps` in your `Config/database.
 ```
 
 
-After all API definitions are included, call the Generator with,
+After all API definitions are included, call this command. It will run the tests and create documents.
+```
+php artisan generate:docs-tests
+```
+
+If you don't want to run the tests, you can only create the docs with:
 ```
 php artisan generate:docs
 ```
 
-The screen will output the generated filenames.  If you have installed [ApiDocs.js](http://apidocjs.com/), then to complete the HTML documentation, run
-```
-apidoc -i resources/docs -o public_html/docs/api
-```
 
 ## Notes About Documentation
 
@@ -244,3 +276,18 @@ apidoc -i resources/docs -o public_html/docs/api
 - See the videos below for more information on this feature.
 - [Importing API as a Postman Collection](https://youtu.be/WQwYNu4PCpg?t=73)
 - [Postman Environments](https://youtu.be/M3QAjLTqC9c)
+
+## Common Issues
+
+- Most of the time, when there's an error, it will tell you exactly why it happened on screen, and most of the time what you should do. So please read it first and look for a solution there.
+- When there's an error, it will show the line of file where the error happened. Also look for the line on screen just before an error was shown.
+
+- Apidoc generation fails. 
+    - Try running it manually with `apidoc -i resources/docs/apidoc -o public_html/docs/api`
+
+- PHPUnit error when calling `php artisan generate:docs-tests`. 
+    - If it's an error when running the test, you should fix your code that generated the error. 
+    - The actual HTTP response will be saved in `resources/docs/api_responses/auto_generated`
+    - Run phpunit with `./vendor/bin/phpunit` and resolve the error first
+
+- Found a bug? Report as an issue and submit a pull request.
