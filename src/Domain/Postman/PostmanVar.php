@@ -8,26 +8,40 @@ namespace EMedia\Api\Domain\Postman;
 class PostmanVar
 {
 
-    // Pre-defined
-    public const REGISTERED_USER_EMAIL 	= 'login_user_email';
-    public const REGISTERED_USER_PASS 	= 'login_user_pass';
+	// Pre-defined
 
-    // Common
-    public const UUID = '$guid';
+	/** Registered/login user to test the logins.
+	 *  This should not be the same as the `test_user`
+	 *  Because logging-in will can reset the `access_token`
+	 */
+	public const REGISTERED_USER_EMAIL 	= 'login_user_email';
+	public const REGISTERED_USER_PASS 	= 'login_user_pass';
 
-    // Names
-    public const LAST_NAME 	= '$randomLastName';
-    public const FIRST_NAME = '$randomFirstName';
+	/**
+	 *  Use the test_user to test API calls with an access token
+	 */
+	public const TEST_USER_EMAIL = 'test_user_email';
 
-    // Domains, Emails, Usernames
-    public const EXAMPLE_EMAIL = '$randomExampleEmail';
-    public const EMAIL = '$randomEmail';
+	// Common
+	public const UUID = '$guid';
 
-    // Phone, Address and Location
-    public const PHONE = '$randomPhoneNumber';
+	// Names
+	public const LAST_NAME 	= '$randomLastName';
+	public const FIRST_NAME = '$randomFirstName';
 
-    // Grammar
-    public const PHRASE = '$randomPhrase';
+	// Domains, Emails, Usernames
+	public const EXAMPLE_EMAIL = '$randomExampleEmail';
+	public const EMAIL = '$randomEmail';
+
+	// Phone, Address and Location
+	public const PHONE = '$randomPhoneNumber';
+
+	// Grammar
+	public const PHRASE = '$randomPhrase';
+
+	// Images
+	/** Add a random image. This will only work on server-side. */
+	public const RANDOM_IMAGE_FILE = 'random_image_file';
 
     // TODO: add other variables
 

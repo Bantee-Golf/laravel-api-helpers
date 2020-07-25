@@ -659,6 +659,19 @@ class APICall
         return $this;
     }
 
+	/**
+	 *
+	 * Helper method to allow file uploads
+	 *
+	 * @return $this
+	 */
+	public function hasFileUploads()
+	{
+		$this->setConsumes([APICall::CONSUME_MULTIPART_FORM]);
+
+		return $this;
+    }
+
     /**
      * @return mixed
      */
