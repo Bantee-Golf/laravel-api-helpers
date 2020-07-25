@@ -23,6 +23,7 @@ On your `.env` and `.env.example` files, add these values
 ```
 APP_SANDBOX_URL=https://sandbox-project-url.preview.cx
 APP_SANDBOX_API_KEY="123-123-123-123"
+API_SAVE_TEST_RESPONSES=true
 ```
 
 The package will be auto-discovered. For version compatibility with past Laravel versions, see `CHANGELOG.md`.

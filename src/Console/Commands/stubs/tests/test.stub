@@ -20,7 +20,7 @@ class {{ class }} extends APIBaseTestCase
      */
     public function {{ $testName }}()
     {
-        $parameters = $cookies = $files = $headers = $server = [];
+        $data = $cookies = $files = $headers = $server = [];
         $faker = \Faker\Factory::create('en_AU');
         $content = null;
 
@@ -51,7 +51,9 @@ class {{ class }} extends APIBaseTestCase
                 $response = $this->post('{{ $uri }}', $data, $headers);
                 @break
             @default
-                $response = $this->call('{{ $method }}', '{{ $uri }}', $parameters, $cookies, $files, $server, $content);
+                $server = $this->transformHeadersToServerVars($headers);
+				$cookies = $this->prepareCookiesForRequest();
+                $response = $this->call('{{ $method }}', '{{ $uri }}', $data, $cookies, $files, $server, $content);
         @endswitch
 
         $this->saveResponse($response->getContent(), '{{ $operationId }}', $response->getStatusCode());

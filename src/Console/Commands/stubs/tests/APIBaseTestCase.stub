@@ -2,6 +2,8 @@
 
 namespace {{ namespace }};
 
+use EMedia\Devices\Auth\DeviceAuthenticator;
+use EMedia\Devices\Auth\DeviceNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -13,12 +15,13 @@ class {{ class }} extends TestCase
 
 	protected $responseStoragePath;
     protected $saveResponses = false;
+	protected $accessToken;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (env('API_SAVE_TEST_RESPONSES', false)) {
+        if (env('API_SAVE_TEST_RESPONSES', true)) {
             $this->responseStoragePath = self::getApiResponsesAutoGenDir(true);
             $this->saveResponses = true;
         }
@@ -42,10 +45,29 @@ class {{ class }} extends TestCase
 		return $key;
 	}
 
-	protected function getAccessToken()
-	{
-		// TODO: add token
-		return '';
-	}
+    /**
+     *
+     * Get the x-access-token for the default user
+     *
+     * @return mixed
+     * @throws DeviceNotFoundException
+     */
+    protected function getAccessToken()
+    {
+        if ($this->accessToken) {
+            return $this->accessToken;
+        }
+
+        $testUserId = config('oxygen.api.testUserId', 4);
+        $accessToken = DeviceAuthenticator::getAnAccessTokenForUserId($testUserId);
+
+        if (!$accessToken) {
+            throw new DeviceNotFoundException("A device not found for the user with ID {$testUserId}. Seed database with at least 1 active device for this user.");
+        }
+
+        $this->accessToken = $accessToken;
+
+        return $accessToken;
+    }
 
 }
