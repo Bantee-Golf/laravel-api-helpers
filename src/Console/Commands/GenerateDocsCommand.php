@@ -488,9 +488,6 @@ class GenerateDocsCommand extends Command
                 $responseObjectName = 'SuccessResponse';
             }
 
-            logfile($parameters, 'v2-parameters.json');
-            logfile($securityDefinitions, 'v2-security.json');
-
             $pathData = [
                 'tags' => [
                     $item->getGroup(),
