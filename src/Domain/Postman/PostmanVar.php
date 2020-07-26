@@ -76,6 +76,9 @@ class PostmanVar
             case self::PHRASE:
                 return '$faker->sentence';
                 break;
+			case self::RANDOM_IMAGE_FILE:
+				return '\Illuminate\Http\UploadedFile::fake()->image(\'image.jpg\')';
+				break;
             default:
                 // remove $ sign to avoid conflicts
                 return "'" . ltrim($varName, " \t\n\r\0\x0B$") . "'";

@@ -504,7 +504,7 @@ class GenerateDocsCommand extends Command
                         'schema' => [
                             '$ref' => "#/definitions/$responseObjectName",
                         ],
-                        'description' => 'Success response',
+                        'description' => $responseObjectName,
                     ],
                     '401' => [
                         'schema' => [

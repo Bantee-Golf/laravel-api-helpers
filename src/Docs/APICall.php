@@ -256,6 +256,7 @@ class APICall
                 // start from 1, because 0 is already handlded above
                 for ($i = 1, $iMax = count($args); $i < $iMax; $i++) {
                     $arg = $args[$i];
+                	if (empty($arg)) continue;
 
                     // check for data types
                     if (in_array($arg, Param::getDataTypes())) {
@@ -276,6 +277,7 @@ class APICall
                     // check variables
                     if (strpos($arg, '{{') === 0) {
                         $param->setVariable($arg);
+						continue;
                     }
 
                     // other values
@@ -288,11 +290,12 @@ class APICall
                         $functionName = 'set' . Str::studly($type);
                         if (method_exists($param, $functionName)) {
                             $param->$functionName($arg);
-                        } else {
-                            // otherwise set as description
-                            $param->setDescription($arg);
+							continue;
                         }
                     }
+
+					// if nothing else matches, set as description
+					$param->setDescription($arg);
                 }
             }
 

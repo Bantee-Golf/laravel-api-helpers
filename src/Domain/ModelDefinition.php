@@ -29,9 +29,16 @@ class ModelDefinition
         $definitions = [];
         foreach ($models as $model) {
             $definition = $this->getModelDefinition($model);
-            if (!in_array($definition['name'], $hiddenModelDefinitions)) {
-                $definitions[$definition['name']] = $definition['definition'];
-            }
+
+			// if hidden, don't include them
+			if (!in_array($definition['name'], $hiddenModelDefinitions)) {
+				// if already included, don't include them
+				// this will prioritise the models in local project first
+				// and ignore any inherited ones if found.
+				if (!isset($definitions[$definition['name']])) {
+					$definitions[$definition['name']] = $definition['definition'];
+				}
+			}
         }
 
         $definitions['SuccessResponse'] = [
