@@ -100,7 +100,9 @@ Returns (Unprocessable Entity - 422 by default)
 
 ## Documentation Builder
 
+
 You can use this package to auto-generate:
+
 - HTML API Specs
 - Swagger configurations 
 - Postman collections
@@ -295,4 +297,10 @@ php artisan generate:docs
     - The actual HTTP response will be saved in `resources/docs/api_responses/auto_generated`
     - Run phpunit with `./vendor/bin/phpunit` and resolve the error first
 
+
+## Contributing
+
 - Found a bug? Report as an issue and submit a pull request.
+- Please see [CONTRIBUTING](CONTRIBUTING.md) and for details.
+
+Copyright (c) 2020 Elegant Media.

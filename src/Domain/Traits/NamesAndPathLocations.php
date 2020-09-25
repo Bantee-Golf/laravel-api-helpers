@@ -62,7 +62,7 @@ trait NamesAndPathLocations
 
     public static function getDocsOutputDir($createIfNotExists = false)
     {
-        $dirPath = base_path('public_html' . DIRECTORY_SEPARATOR . 'docs');
+        $dirPath = public_path(DIRECTORY_SEPARATOR . 'docs');
 
         if ($createIfNotExists) {
             DirManager::makeDirectoryIfNotExists($dirPath);

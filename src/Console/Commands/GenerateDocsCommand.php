@@ -309,7 +309,7 @@ class GenerateDocsCommand extends Command
         // Swagger Config
         $swaggerConfig = new SwaggerV2();
         $swaggerConfig->setBasePath($basePath);
-        $swaggerConfig->setServerUrl(getenv('APP_URL'));
+        $swaggerConfig->setServerUrl($this->getenv('APP_URL'));
 
         foreach ($items as $item) {
             /** @var APICall $item */
@@ -548,8 +548,8 @@ class GenerateDocsCommand extends Command
         } else {
 
             // if there is a sandbox URL, we should use that as the host
-            if (getenv('APP_SANDBOX_URL') !== false) {
-                $swaggerConfig->setServerUrl(getenv('APP_SANDBOX_URL'));
+            if ($this->getenv('APP_SANDBOX_URL') !== false) {
+                $swaggerConfig->setServerUrl($this->getenv('APP_SANDBOX_URL'));
                 $swaggerConfig->setSchemes(['http', 'https']);
             }
 
@@ -583,12 +583,12 @@ class GenerateDocsCommand extends Command
         $postmanEnvironment->addVariable('test_user_email', $this->testUser->email);
 
         // Generate Local Environment Config
-        if (getenv('APP_ENV') === 'local') {
+        if ($this->getenv('APP_ENV') === 'local') {
             $filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_local.json';
             $postmanEnvironment->setName(sprintf("%s Environment (LOCAL)", config('app.name')));
-            $postmanEnvironment->setServerUrl(getenv('APP_URL'));
+            $postmanEnvironment->setServerUrl($this->getenv('APP_URL'));
 
-            if (getenv('API_KEY') !== false) {
+            if ($this->getenv('API_KEY') !== false) {
                 $postmanEnvironment->addVariable('x-api-key', getenv('API_KEY'));
                 $postmanEnvironment->addVariable('x-access-token', $this->getDefaultUserAccessToken());
             }
@@ -603,17 +603,17 @@ class GenerateDocsCommand extends Command
         }
 
         // Generate Sandbox Environment Config
-        if (getenv('APP_SANDBOX_URL') === false) {
+        if ($this->getenv('APP_SANDBOX_URL') === false) {
             $this->info("`APP_SANDBOX_URL` not found in your `.env`. Sandbox Environment file not generated.");
         } else {
             $postmanEnvironment->setName(sprintf("%s Environment (SANDBOX)", config('app.name')));
             $filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_sandbox.json';
-            $postmanEnvironment->setServerUrl(getenv('APP_SANDBOX_URL'));
+            $postmanEnvironment->setServerUrl($this->getenv('APP_SANDBOX_URL'));
 
             // force https on sandbox URLs to prevent people doing stupid things
             $postmanEnvironment->addVariable('scheme', 'https');
 
-            if (getenv('APP_SANDBOX_API_KEY') !== false) {
+            if ($this->getenv('APP_SANDBOX_API_KEY') !== false) {
                 $postmanEnvironment->addVariable('x-api-key', getenv('APP_SANDBOX_API_KEY'));
             }
 
@@ -623,6 +623,22 @@ class GenerateDocsCommand extends Command
 
         $this->createdFiles[] = ['---', '---'];
     }
+
+	/**
+	 *
+	 * Try to get env variables. Try laravel's function first.
+	 *
+	 * @param $name
+	 * @return array|false|mixed|string
+	 */
+	protected function getenv($name)
+	{
+		$var = env($name);
+
+		if ($var) return $var;
+
+		return getenv($name);
+	}
 
     /**
      *
@@ -697,7 +713,7 @@ class GenerateDocsCommand extends Command
     protected function getDefaultUserAccessToken()
     {
         if ($this->testUser) {
-            $accessToken = \EMedia\Devices\Auth\DeviceAuthenticator::getAnAccessTokenForUserId($this->testUser->id);
+            $accessToken = app(\EMedia\Devices\Auth\DeviceAuthenticator::class)::getAnAccessTokenForUserId($this->testUser->id);
             if ($accessToken) {
                 return $accessToken;
             }

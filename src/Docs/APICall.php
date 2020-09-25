@@ -253,7 +253,7 @@ class APICall
                 }
                 $param = new Param($args[0]);
 
-                // start from 1, because 0 is already handlded above
+                // start from 1, because 0 is already handled above
                 for ($i = 1, $iMax = count($args); $i < $iMax; $i++) {
                     $arg = $args[$i];
                 	if (empty($arg)) continue;
