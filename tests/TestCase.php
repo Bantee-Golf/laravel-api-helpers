@@ -3,7 +3,6 @@
 
 namespace EMedia\Api\Tests;
 
-
 use App\Controllers\Http\TestController;
 use App\Entities\Auth\UsersRepository;
 use App\User;
@@ -40,8 +39,8 @@ class TestCase extends \Orchestra\Testbench\TestCase
 	protected function getEnvironmentSetUp($app)
 	{
 		$app->useEnvironmentPath(__DIR__);
-        $app->bootstrapWith([LoadEnvironmentVariables::class]);
-        parent::getEnvironmentSetUp($app);
+		$app->bootstrapWith([LoadEnvironmentVariables::class]);
+		parent::getEnvironmentSetUp($app);
 	}
 
 	protected function registerRoutes()
@@ -106,7 +105,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 		$output = $this->getConsoleOutput();
 
 		foreach ($lines as $line) {
-			$this->assertStringContainsString($line,$output);
+			$this->assertStringContainsString($line, $output);
 		}
 
 		return $output;
@@ -117,7 +116,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 		$output = $this->getConsoleOutput();
 
 		foreach ($lines as $line) {
-			$this->assertStringNotContainsString($line,$output);
+			$this->assertStringNotContainsString($line, $output);
 		}
 
 		return $output;

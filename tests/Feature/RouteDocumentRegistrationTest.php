@@ -101,6 +101,4 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 			TestController::INDEX_METHOD_NAME
 		);
 	}
-
-
 }

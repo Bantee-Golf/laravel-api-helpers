@@ -3,7 +3,6 @@
 
 namespace EMedia\Api\Tests\Feature;
 
-
 use App\Controllers\Http\TestController;
 use EMedia\Api\Tests\TestCase;
 
