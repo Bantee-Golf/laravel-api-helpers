@@ -5,6 +5,8 @@ namespace EMedia\Api\Domain\Postman;
 
 // Refer to
 // https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
+use EMedia\Api\Docs\Param;
+
 class PostmanVar
 {
 
@@ -51,11 +53,20 @@ class PostmanVar
 	 * See list at
 	 * https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
 	 *
-	 * @param $varName
+	 * @param array $param
 	 * @return string
 	 */
-	public static function postmanToFaker($varName): string
+	public static function postmanToFaker(array $param): string
 	{
+		$varName = $param['param_value'];
+
+		// handle data types
+		switch ($param['type']) {
+			case Param::TYPE_BOOLEAN:
+				return ($param['param_value']) ? 'true': 'false';
+				break;
+		}
+
 		switch ($varName) {
 			case self::UUID:
 				return '$faker->uuid';

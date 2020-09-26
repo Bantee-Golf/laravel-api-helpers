@@ -28,7 +28,7 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 	{
 		Route::get('/api/v1/undocumented', '\App\Controllers\Http\TestController@undocumented');
 
-		$testUserId = 4;
+		$testUserId = $this->getTestUserId();
 
 		$this->mockDataSources($testUserId);
 

@@ -192,4 +192,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
 		return $testFile;
 	}
+
+	protected function getTestUserId()
+	{
+		return '4';
+	}
 }

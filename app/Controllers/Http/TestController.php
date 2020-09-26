@@ -13,6 +13,7 @@ class TestController extends Controller
 	public const TEST_HEADER_PARAMS = 'TEST_HEADER_PARAMS';
 	public const TEST_BODY_PARAMS = 'TEST_BODY_PARAMS';
 	public const MANUAL_OVERRIDE = 'MANUAL_OVERRIDE';
+	public const PARAM_TYPES = 'PARAM_TYPES';
 
 
 	public function undocumented()
@@ -65,6 +66,21 @@ class TestController extends Controller
 				->setParams([
 					(new Param('device_type'))->setLocation(Param::LOCATION_FORM)->setDefaultValue('my_device'),
 					(new Param('device_id'))->setLocation(Param::LOCATION_FORM)->setDefaultValue('my_id'),
+				]);
+		});
+
+		return [];
+	}
+
+	public function correctParameterTypes()
+	{
+		document(function () {
+			return (new APICall())
+				->setName(self::PARAM_TYPES)
+				->setParams([
+					(new Param('is_boolean', 'boolean', 'Accepted values `true`, `false`'))
+						->setLocation(Param::LOCATION_FORM)
+						->setExample(true),
 				]);
 		});
 

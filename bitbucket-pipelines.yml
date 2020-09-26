@@ -8,4 +8,5 @@ pipelines:
               script:
                   - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
                   - composer update --no-interaction
+                  - composer global require friendsofphp/php-cs-fixer
                   - vendor/bin/phpunit

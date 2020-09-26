@@ -35,7 +35,7 @@ class {{ class }} extends APIBaseTestCase
 	                    $headers['x-access-token'] = $this->getAccessToken();
 	                    @break
 	                @default
-	                    $headers['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param['param_value']) !!};
+	                    $headers['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param) !!};
 	            @endswitch
 	        @endforeach
 		@endif
@@ -43,7 +43,7 @@ class {{ class }} extends APIBaseTestCase
 		@if (isset($param_locations['formData']))
 			// form params
             @foreach ($param_locations['formData'] as $param)
-                $data['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param['param_value']) !!};
+                $data['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param) !!};
             @endforeach
 		@endif
 
