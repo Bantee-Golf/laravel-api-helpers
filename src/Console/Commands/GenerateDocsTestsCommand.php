@@ -6,11 +6,6 @@ namespace EMedia\Api\Console\Commands;
 use EMedia\Api\Domain\Traits\HandlesProcess;
 use EMedia\Api\Domain\Traits\NamesAndPathLocations;
 use Illuminate\Console\Command;
-
-use Illuminate\Support\Facades\File;
-use PHPUnit\Exception;
-use PHPUnit\Framework\TestSuite;
-use PHPUnit\TextUI\TestRunner;
 use Symfony\Component\Process\Process;
 
 class GenerateDocsTestsCommand extends Command

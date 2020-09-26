@@ -4,6 +4,8 @@
 namespace EMedia\Api\Console\Commands;
 
 use App\Entities\Auth\UsersRepository;
+use ElegantMedia\PHPToolkit\Dir;
+use ElegantMedia\PHPToolkit\Exceptions\FIleSystem\DirectoryNotCreatedException;
 use EMedia\Api\Docs\APICall;
 use EMedia\Api\Docs\Param;
 use EMedia\Api\Docs\ParamType;
@@ -18,7 +20,6 @@ use EMedia\Api\Domain\Vendors\ApiDoc;
 use EMedia\Api\Exceptions\APICallsNotDefinedException;
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
 use EMedia\Api\Exceptions\UndocumentedAPIException;
-use EMedia\PHPHelpers\Files\DirManager;
 use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -105,7 +106,7 @@ class GenerateDocsCommand extends Command
 		}
 
 		$this->docsFolder = public_path('docs');
-		DirManager::makeDirectoryIfNotExists($this->docsFolder);
+		Dir::makeDirectoryIfNotExists($this->docsFolder);
 
 		putenv('DOCUMENTATION_MODE=true');
 		$this->docBuilder = app('emedia.api.builder');
@@ -286,10 +287,12 @@ class GenerateDocsCommand extends Command
 	/**
 	 *
 	 * Create swagger 2.0 json file
-	 *
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 * @param string $type
+	 * @throws \EMedia\Api\Exceptions\FileGenerationFailedException
+	 * @throws \Illuminate\Contracts\Filesystem\FileExistsException
+	 * @throws \ReflectionException
 	 */
-	protected function createSwaggerJson($type = 'api')
+	protected function createSwaggerJson($type = 'api'): void
 	{
 		if (!in_array($type, ['api', 'postman'])) {
 			throw new \InvalidArgumentException("The given type $type is an invalid argument");
@@ -571,10 +574,10 @@ class GenerateDocsCommand extends Command
 	 *
 	 * @param PostmanEnvironment $postmanEnvironment
 	 * @throws \EMedia\ApiBuilder\Exceptions\FileGenerationFailedException
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
 	 * @throws \Illuminate\Contracts\Filesystem\FileExistsException
+	 * @throws \EMedia\Api\Exceptions\FileGenerationFailedException
 	 */
-	protected function writePostmanEnvironments(PostmanEnvironment $postmanEnvironment)
+	protected function writePostmanEnvironments(PostmanEnvironment $postmanEnvironment): void
 	{
 		$postmanEnvironment->addVariable('login_user_email', $this->loginUser->email);
 		$postmanEnvironment->addVariable('login_user_pass', $this->option('login-user-pass'));
@@ -645,9 +648,9 @@ class GenerateDocsCommand extends Command
 	 *
 	 * Create the documentation source files
 	 *
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 * @throws DirectoryNotCreatedException
 	 */
-	protected function createDocSourceFiles()
+	protected function createDocSourceFiles(): void
 	{
 		$items = $this->docBuilder->getApiCalls();
 

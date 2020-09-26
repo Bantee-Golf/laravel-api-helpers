@@ -4,9 +4,6 @@
 namespace EMedia\Api\Domain\FileGenerators\Postman;
 
 use EMedia\Api\Domain\FileGenerators\BaseFileGenerator;
-use EMedia\Api\Exceptions\FileGenerationFailedException;
-use EMedia\PHPHelpers\Files\DirManager;
-use Illuminate\Contracts\Filesystem\FileExistsException;
 use Illuminate\Support\Collection;
 
 class PostmanEnvironment extends BaseFileGenerator
