@@ -64,9 +64,8 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 	 *
 	 * Test for generating postman_collection, swagger files, apidoc files
 	 *
-	 * @throws \EMedia\PHPHelpers\Exceptions\FileSystem\FileNotFoundException
 	 */
-	public function testDocSourcesGenerated()
+	public function testDocSourcesGenerated(): void
 	{
 		$generatedFiles = [
 			public_path('docs/postman_collection.json'),

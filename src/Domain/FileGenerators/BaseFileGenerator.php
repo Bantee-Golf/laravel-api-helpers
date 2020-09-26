@@ -1,8 +1,9 @@
 <?php
 namespace EMedia\Api\Domain\FileGenerators;
 
+use ElegantMedia\PHPToolkit\Dir;
+use ElegantMedia\PHPToolkit\Exceptions\FIleSystem\DirectoryNotCreatedException;
 use EMedia\Api\Exceptions\FileGenerationFailedException;
-use EMedia\PHPHelpers\Files\DirManager;
 use Illuminate\Contracts\Filesystem\FileExistsException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -51,9 +52,8 @@ abstract class BaseFileGenerator
 	 * @return bool
 	 * @throws FileExistsException
 	 * @throws FileGenerationFailedException
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
 	 */
-	public function writeOutputFileJson($outputFilePath, $overwrite = true)
+	public function writeOutputFileJson($outputFilePath, $overwrite = true): bool
 	{
 		if (!$overwrite && file_exists($outputFilePath)) {
 			throw new FileExistsException("File {$outputFilePath} already exists.");
@@ -66,7 +66,7 @@ abstract class BaseFileGenerator
 		}
 
 		$outputDir = pathinfo($outputFilePath, PATHINFO_DIRNAME);
-		DirManager::makeDirectoryIfNotExists($outputDir);
+		Dir::makeDirectoryIfNotExists($outputDir);
 
 		file_put_contents($outputFilePath, $outputString);
 
@@ -83,16 +83,16 @@ abstract class BaseFileGenerator
 	 * @return bool
 	 * @throws FileExistsException
 	 * @throws FileGenerationFailedException
-	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 * @throws DirectoryNotCreatedException
 	 */
-	public function writeOutputFileYaml($outputFilePath, $overwrite = true)
+	public function writeOutputFileYaml($outputFilePath, $overwrite = true): bool
 	{
 		if (!$overwrite && file_exists($outputFilePath)) {
 			throw new FileExistsException("File {$outputFilePath} already exists.");
 		}
 
 		$outputDir = pathinfo($outputFilePath, PATHINFO_DIRNAME);
-		DirManager::makeDirectoryIfNotExists($outputDir);
+		Dir::makeDirectoryIfNotExists($outputDir);
 
 		try {
 			$yamlString = Yaml::dump($this->getOutput(), 10, 4, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE|Yaml::DUMP_OBJECT_AS_MAP);

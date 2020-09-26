@@ -3,23 +3,17 @@
 	"description": "API and custom response helpers for Laravel 6 and 7",
 	"type": "package",
 	"license": "private",
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "git@bitbucket.org:elegantmedia/php-helpers.git"
-		}
-	],
 	"require": {
 		"php": "^7.2",
-		"laravel/framework": "^6.0|^7.19",
-		"emedia/php-helpers": "^2.0",
+		"laravel/framework": "^6.0|^7.0|^8.0",
 		"ext-json": "*",
-		"symfony/yaml": "^5.1"
+		"symfony/yaml": "^5.1",
+		"elegantmedia/php-toolkit": "^0.1"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^9.2",
 		"squizlabs/php_codesniffer": "^3.5",
-		"orchestra/testbench": "^5.0"
+		"orchestra/testbench": "^6.0"
 	},
 	"autoload": {
 		"psr-4": {

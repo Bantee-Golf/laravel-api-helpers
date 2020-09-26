@@ -3,6 +3,7 @@
 
 namespace EMedia\Api\Docs;
 
+use ElegantMedia\PHPToolkit\Text;
 use Illuminate\Contracts\Support\Arrayable;
 
 class Param implements Arrayable, \JsonSerializable
@@ -42,7 +43,7 @@ class Param implements Arrayable, \JsonSerializable
 		$this->dataType = $dataType;
 		$this->location = $location;
 		if (!$description && $fieldName) {
-			$this->description = ucfirst(reverse_snake_case($fieldName));
+			$this->description = ucfirst(Text::reverseSnake($fieldName));
 		} else {
 			$this->description = $description;
 		}

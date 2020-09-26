@@ -11,6 +11,15 @@ This package adds the following.
 
 [Watch the Demo Video Here](https://www.dropbox.com/s/76xjohym9s3io5k/20200729-API%20Generation%20Demo.mp4?dl=0)
 
+### Version Compatibility
+
+| Laravel Version | Api Helpers Version      | Branch         |
+| --------------- |:------------------------:|:--------------:|
+| v8              | 4.x                      | master         |  
+| v7              | 3.1.x                    | version/v3.x   |
+
+See [CHANGELOG](CHANGELOG.md) for past versions.
+
 ## Install
 Add the repository to `composer.json`
 ```

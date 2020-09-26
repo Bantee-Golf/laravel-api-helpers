@@ -3,8 +3,8 @@
 
 namespace EMedia\Api\Domain;
 
+use ElegantMedia\PHPToolkit\Loader;
 use EMedia\Api\Docs\Param;
-use EMedia\PHPHelpers\Files\Loader;
 use Illuminate\Database\Eloquent\Model;
 
 class ModelDefinition
