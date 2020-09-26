@@ -24,22 +24,26 @@ class {{ class }} extends APIBaseTestCase
         $faker = \Faker\Factory::create('en_AU');
         $content = null;
 
-        @foreach ($param_locations['header'] as $param)
-            @switch ($param['name'])
-                @case ('x-api-key')
-                    $headers['x-api-key'] = $this->getApiKey();
-                    @break
-                @case ('x-access-token')
-                    $headers['x-access-token'] = $this->getAccessToken();
-                    @break
-                @default
-                    $headers['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param['param_value']) !!};
-            @endswitch
-        @endforeach
+		@if (isset($param_locations['header']))
+			// header params
+	        @foreach ($param_locations['header'] as $param)
+	            @switch ($param['name'])
+	                @case ('x-api-key')
+	                    $headers['x-api-key'] = $this->getApiKey();
+	                    @break
+	                @case ('x-access-token')
+	                    $headers['x-access-token'] = $this->getAccessToken();
+	                    @break
+	                @default
+	                    $headers['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param) !!};
+	            @endswitch
+	        @endforeach
+		@endif
 
 		@if (isset($param_locations['formData']))
+			// form params
             @foreach ($param_locations['formData'] as $param)
-                $data['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param['param_value']) !!};
+                $data['{{ $param['name'] }}'] = {!! \EMedia\Api\Domain\Postman\PostmanVar::postmanToFaker($param) !!};
             @endforeach
 		@endif
 

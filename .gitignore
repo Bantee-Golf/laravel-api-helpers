@@ -1,4 +1,9 @@
-.idea
-vendor/
+build
 composer.lock
+vendor
+phpcs.xml
+phpunit.xml
+.idea
+.phpunit.result.cache
 .php_cs.cache
+LOCAL.md

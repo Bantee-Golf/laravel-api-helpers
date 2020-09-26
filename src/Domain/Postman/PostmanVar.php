@@ -5,6 +5,8 @@ namespace EMedia\Api\Domain\Postman;
 
 // Refer to
 // https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
+use EMedia\Api\Docs\Param;
+
 class PostmanVar
 {
 
@@ -43,45 +45,54 @@ class PostmanVar
 	/** Add a random image. This will only work on server-side. */
 	public const RANDOM_IMAGE_FILE = 'random_image_file';
 
-    // TODO: add other variables
+	// TODO: add other variables
 
-    /**
-     *
-     * Map Postman Dynamic variable names to faker variable names
-     * See list at
-     * https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
-     *
-     * @param $varName
-     * @return string
-     */
-    public static function postmanToFaker($varName): string
-    {
-        switch ($varName) {
-            case self::UUID:
-                return '$faker->uuid';
-                break;
-            case self::FIRST_NAME:
-                return '$faker->firstName';
-                break;
-            case self::LAST_NAME:
-                return '$faker->lastName';
-                break;
-            case self::EXAMPLE_EMAIL:
-            case self::EMAIL:
-                return '$faker->safeEmail';
-                break;
-            case self::PHONE:
-                return '$faker->phoneNumber';
-                break;
-            case self::PHRASE:
-                return '$faker->sentence';
-                break;
+	/**
+	 *
+	 * Map Postman Dynamic variable names to faker variable names
+	 * See list at
+	 * https://learning.postman.com/docs/writing-scripts/script-references/variables-list/
+	 *
+	 * @param array $param
+	 * @return string
+	 */
+	public static function postmanToFaker(array $param): string
+	{
+		$varName = $param['param_value'];
+
+		// handle data types
+		switch ($param['type']) {
+			case Param::TYPE_BOOLEAN:
+				return ($param['param_value']) ? 'true': 'false';
+				break;
+		}
+
+		switch ($varName) {
+			case self::UUID:
+				return '$faker->uuid';
+				break;
+			case self::FIRST_NAME:
+				return '$faker->firstName';
+				break;
+			case self::LAST_NAME:
+				return '$faker->lastName';
+				break;
+			case self::EXAMPLE_EMAIL:
+			case self::EMAIL:
+				return '$faker->safeEmail';
+				break;
+			case self::PHONE:
+				return '$faker->phoneNumber';
+				break;
+			case self::PHRASE:
+				return '$faker->sentence';
+				break;
 			case self::RANDOM_IMAGE_FILE:
 				return '\Illuminate\Http\UploadedFile::fake()->image(\'image.jpg\')';
 				break;
-            default:
-                // remove $ sign to avoid conflicts
-                return "'" . ltrim($varName, " \t\n\r\0\x0B$") . "'";
-        }
-    }
+			default:
+				// remove $ sign to avoid conflicts
+				return "'" . ltrim($varName, " \t\n\r\0\x0B$") . "'";
+		}
+	}
 }

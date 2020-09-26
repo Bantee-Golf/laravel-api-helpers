@@ -7,134 +7,139 @@ use EMedia\PHPHelpers\Files\DirManager;
 
 trait NamesAndPathLocations
 {
-    protected static function getDocsDir($createIfNotExists = false)
-    {
-        $dirPath = resource_path('docs');
+	protected static function getDocsDir($createIfNotExists = false)
+	{
+		$dirPath = resource_path('docs');
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    /**
-     *
-     * Get storage path for API responses
-     *
-     * @param bool $createIfNotExists 	Create directory if it doesn't exist
-     * @return string 		Directory Path
-     *
-     * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
-     */
-    protected static function getApiResponsesStorageDir($createIfNotExists = false)
-    {
-        $dirPath = self::getDocsDir() . DIRECTORY_SEPARATOR . 'api_responses';
+	/**
+	 *
+	 * Get storage path for API responses
+	 *
+	 * @param bool $createIfNotExists 	Create directory if it doesn't exist
+	 * @return string 		Directory Path
+	 *
+	 * @throws \EMedia\PHPHelpers\Exceptions\FIleSystem\DirectoryNotCreatedException
+	 */
+	protected static function getApiResponsesStorageDir($createIfNotExists = false)
+	{
+		$dirPath = self::getDocsDir() . DIRECTORY_SEPARATOR . 'api_responses';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiResponsesAutoGenDir($createIfNotExists = false)
-    {
-        $dirPath = self::getApiResponsesStorageDir() . DIRECTORY_SEPARATOR . 'auto_generated';
+	protected static function getApiResponsesAutoGenDir($createIfNotExists = false)
+	{
+		$dirPath = self::getApiResponsesStorageDir() . DIRECTORY_SEPARATOR . 'auto_generated';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiResponsesManualDir($createIfNotExists = false)
-    {
-        $dirPath = self::getApiResponsesStorageDir() . DIRECTORY_SEPARATOR . 'manual';
+	protected static function getApiResponsesManualDir($createIfNotExists = false)
+	{
+		$dirPath = self::getApiResponsesStorageDir() . DIRECTORY_SEPARATOR . 'manual';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    public static function getDocsOutputDir($createIfNotExists = false)
-    {
-        $dirPath = base_path('public_html' . DIRECTORY_SEPARATOR . 'docs');
+	public static function getDocsOutputDir($createIfNotExists = false)
+	{
+		$dirPath = public_path(DIRECTORY_SEPARATOR . 'docs');
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiDocsOutputDir($createIfNotExists = false)
-    {
-        $dirPath = self::getDocsOutputDir() . DIRECTORY_SEPARATOR . 'api';
+	protected static function getApiDocsOutputDir($createIfNotExists = false)
+	{
+		$dirPath = self::getDocsOutputDir() . DIRECTORY_SEPARATOR . 'api';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiDocsDir($createIfNotExists = false)
-    {
-        $dirPath = self::getDocsDir() . DIRECTORY_SEPARATOR . 'apidoc';
+	protected static function getApiDocsDir($createIfNotExists = false)
+	{
+		$dirPath = self::getDocsDir() . DIRECTORY_SEPARATOR . 'apidoc';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiDocsAutoGenDir($createIfNotExists = false)
-    {
-        $dirPath = self::getApiDocsDir() . DIRECTORY_SEPARATOR . 'auto_generated';
+	protected static function getApiDocsAutoGenDir($createIfNotExists = false)
+	{
+		$dirPath = self::getApiDocsDir() . DIRECTORY_SEPARATOR . 'auto_generated';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    protected static function getApiDocsManualDir($createIfNotExists = false)
-    {
-        $dirPath = self::getApiDocsDir() . DIRECTORY_SEPARATOR . 'manual';
+	protected static function getApiDocsManualDir($createIfNotExists = false)
+	{
+		$dirPath = self::getApiDocsDir() . DIRECTORY_SEPARATOR . 'manual';
 
-        if ($createIfNotExists) {
-            DirManager::makeDirectoryIfNotExists($dirPath);
-        }
+		if ($createIfNotExists) {
+			DirManager::makeDirectoryIfNotExists($dirPath);
+		}
 
-        return $dirPath;
-    }
+		return $dirPath;
+	}
 
-    public static function getTestsAutoGenDir($apiVersion = null)
-    {
-        $path = 'Feature' . DIRECTORY_SEPARATOR . 'AutoGen' . DIRECTORY_SEPARATOR . 'API';
+	public static function getTestsAutoGenDir($apiVersion = null)
+	{
+		$path = 'Feature' . DIRECTORY_SEPARATOR . 'AutoGen' . DIRECTORY_SEPARATOR . 'API';
 
-        if ($apiVersion) {
-            $path .= DIRECTORY_SEPARATOR . strtoupper($apiVersion);
-        }
+		if ($apiVersion) {
+			$path .= DIRECTORY_SEPARATOR . strtoupper($apiVersion);
+		}
 
-        return $path;
-    }
+		return $path;
+	}
 
-    /**
-     *
-     * Delete old files
-     *
-     * @param $dirPath
-     * @param $fileExtension
-     */
-    public static function deleteFilesInDirectory($dirPath, $fileExtension)
-    {
-        array_map('unlink', glob("$dirPath/*.$fileExtension"));
-    }
+	public static function getTestFilePath($apiVersion, $relativePath)
+	{
+		return base_path('tests/'.self::getTestsAutoGenDir($apiVersion).DIRECTORY_SEPARATOR.$relativePath);
+	}
+
+	/**
+	 *
+	 * Delete old files
+	 *
+	 * @param $dirPath
+	 * @param $fileExtension
+	 */
+	public static function deleteFilesInDirectory($dirPath, $fileExtension)
+	{
+		array_map('unlink', glob("$dirPath/*.$fileExtension"));
+	}
 }
