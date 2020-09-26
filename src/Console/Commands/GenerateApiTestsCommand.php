@@ -15,7 +15,7 @@ class GenerateApiTestsCommand extends TestMakeCommand
 	use NamesAndPathLocations;
 
 	protected $signature = 'generate:api-tests
-								{--force : Force overwrite} 
+								{--force : Force overwrite}
 								{--debug : Dump debug information}';
 
 	protected $description = 'Generate API Tests';
@@ -39,6 +39,11 @@ class GenerateApiTestsCommand extends TestMakeCommand
 		$this->generateApiBaseTestCase();
 
 		foreach ($pathsData as $pathData) {
+			// if you need to debug a path, you may catch and dump here
+			// if ($pathData['uri'] === '/api/v1/notifications') {
+				// dd($pathData);
+			// }
+
 			$this->generateApiTest($pathData);
 		}
 
@@ -114,6 +119,17 @@ class GenerateApiTestsCommand extends TestMakeCommand
 			$this->error($this->type.' already exists!');
 
 			return false;
+		}
+
+		// Next, we check if there's a Manually created class by user.
+		// If it exists, we don't want to auto-generate another class. Because we can assume humans know
+		// what they're doing.
+		if (str_contains($path, 'AutoGen')) {
+			$manualPath = str_replace('AutoGen', 'Manual', $path);
+			if (file_exists($manualPath)) {
+				$this->info(pathinfo($manualPath, PATHINFO_FILENAME).' exists. So an overriding file is not generated.');
+				return false;
+			}
 		}
 
 		// Next, we will generate the path to the location where this class' file should get

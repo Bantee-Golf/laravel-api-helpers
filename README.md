@@ -3,6 +3,13 @@
 This package adds the following.
 
 - Custom request responses.
+- Auto-generated API tests
+- HTML API Specs
+- Swagger configurations 
+- Postman collections
+- Postman environments
+
+[Watch the Demo Video Here](https://www.dropbox.com/s/76xjohym9s3io5k/20200729-API%20Generation%20Demo.mp4?dl=0)
 
 ## Install
 Add the repository to `composer.json`
@@ -99,14 +106,6 @@ Returns (Unprocessable Entity - 422 by default)
 ```
 
 ## Documentation Builder
-
-
-You can use this package to auto-generate:
-
-- HTML API Specs
-- Swagger configurations 
-- Postman collections
-- Postman environments
 
 To allow auto-generation of docs, you need to call the `document()` function immidiately after the functions.
 
@@ -270,6 +269,12 @@ If you don't want to run the tests, you can only create the docs with:
 php artisan generate:docs
 ```
 
+## Overriding auto-generated files
+
+You can manually override responses and Test files. Just crate a `manual` folder and add the file with a same name there.
+
+For example:
+If you don't want the test `tests/Feature/AutoGen/API/V1/MyTestAPI.php` to be created, manually create a file called `tests/Feature/Manual/API/V1/MyTestAPI.php`
 
 ## Notes About Documentation
 

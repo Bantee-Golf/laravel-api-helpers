@@ -126,6 +126,11 @@ trait NamesAndPathLocations
 		return $path;
 	}
 
+	public static function getTestFilePath($apiVersion, $relativePath)
+	{
+		return base_path('tests/'.self::getTestsAutoGenDir($apiVersion).DIRECTORY_SEPARATOR.$relativePath);
+	}
+
 	/**
 	 *
 	 * Delete old files

@@ -28,12 +28,17 @@ class TestCase extends \Orchestra\Testbench\TestCase
 		$this->registerRoutes();
 
 		$this->withoutMockingConsoleOutput();
+	}
 
-		$this->beforeApplicationDestroyed(function () {
-			// if you need to debug, comment this and see the files generated in
-			// vendor/orchestra/testbench-core
-			$this->cleanupGeneratedFiles();
-		});
+	public function tearDown(): void
+	{
+		// if you need to debug, comment this and see the files generated in
+		// vendor/orchestra/testbench-core
+		// $this->cleanupGeneratedFiles();
+
+		$this->resetEnvironment();
+
+		parent::tearDown();
 	}
 
 	protected function getEnvironmentSetUp($app)
@@ -50,11 +55,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
 	protected function generatedTestFilePaths()
 	{
-		$testsDir = NamesAndPathLocations::getTestsAutoGenDir('v1');
-
 		return [
-			base_path('tests/'.$testsDir.'/APIBaseTestCase.php'),
-			base_path('tests/'.$testsDir.'/Test'.TestController::INDEX_METHOD_NAME.'APITest.php'),
+			NamesAndPathLocations::getTestFilePath('v1', 'APIBaseTestCase.php'),
+			NamesAndPathLocations::getTestFilePath('v1', 'Test'.TestController::INDEX_METHOD_NAME.'APITest.php'),
 		];
 	}
 
@@ -81,7 +84,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
 	protected function getLocalRoot($suffix = null)
 	{
-		$path = __DIR__.'/../laravel';
+		$path = __DIR__.'/../app';
 
 		if ($suffix) {
 			$path .= '/'. ltrim($suffix, '/');
@@ -122,13 +125,27 @@ class TestCase extends \Orchestra\Testbench\TestCase
 		return $output;
 	}
 
+	/**
+	 * @param $path
+	 * @param string|array $text
+	 * @return $this
+	 * @throws FileNotFoundException
+	 */
 	protected function assertFileHasText($path, $text)
 	{
 		if (!file_exists($path)) {
 			throw new FileNotFoundException("File $path not found");
 		}
 
-		$this->assertStringContainsString($text, file_get_contents($path));
+		$content = file_get_contents($path);
+
+		if (is_array($text)) {
+			foreach ($text as $line) {
+				$this->assertStringContainsString($line, $content);
+			}
+		} else {
+			$this->assertStringContainsString($text, $content);
+		}
 
 		return $this;
 	}
@@ -136,6 +153,14 @@ class TestCase extends \Orchestra\Testbench\TestCase
 	protected function setApiKey()
 	{
 		putenv('API_KEY="123-123-123-123"');
+
+		return $this;
+	}
+
+	public function resetEnvironment()
+	{
+		putenv('API_KEY');
+		putenv('DOCUMENTATION_MODE');
 
 		return $this;
 	}
@@ -157,5 +182,14 @@ class TestCase extends \Orchestra\Testbench\TestCase
 			$mock->shouldReceive()->getAnAccessTokenForUserId($testUserId)
 				->andReturn('1234-1234');
 		});
+	}
+
+	protected function assertTestGenerated($testName)
+	{
+		$testFile = NamesAndPathLocations::getTestFilePath('v1', 'Test' . $testName . 'APITest.php');
+
+		$this->assertFileExists($testFile);
+
+		return $testFile;
 	}
 }

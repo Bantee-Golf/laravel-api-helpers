@@ -9,12 +9,13 @@ class Param implements Arrayable, \JsonSerializable
 {
 
 	// Parameter Locations
-	public const LOCATION_HEADER 	= 'header';
-	public const LOCATION_FORM 		= 'formData';
-	public const LOCATION_COOKIE 	= 'cookie';
+	// https://swagger.io/docs/specification/2-0/describing-parameters/
 	public const LOCATION_PATH 		= 'path';
 	public const LOCATION_QUERY 	= 'query';
-	public const LOCATION_BODY 		= 'body';
+	public const LOCATION_HEADER 	= 'header';
+	public const LOCATION_COOKIE 	= 'cookie';
+	public const LOCATION_BODY		= 'body';
+	public const LOCATION_FORM 		= 'formData';
 
 	// Data Types
 	public const TYPE_STRING = 'string';

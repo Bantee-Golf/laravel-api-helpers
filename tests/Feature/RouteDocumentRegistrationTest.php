@@ -32,8 +32,6 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 
 		$this->mockDataSources($testUserId);
 
-		$response = $this->get('api/v1/undocumented');
-
 		$this->artisan("generate:docs --test-user-id={$testUserId}");
 
 		$this->expectsConsoleOutput([
