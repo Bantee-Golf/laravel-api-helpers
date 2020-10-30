@@ -127,7 +127,7 @@ class GenerateApiTestsCommand extends TestMakeCommand
 		if (str_contains($path, 'AutoGen')) {
 			$manualPath = str_replace('AutoGen', 'Manual', $path);
 			if (file_exists($manualPath)) {
-				$this->info(pathinfo($manualPath, PATHINFO_FILENAME).' exists. So an overriding file is not generated.');
+				$this->info(pathinfo($manualPath, PATHINFO_FILENAME).' exists. Skipping...');
 				return false;
 			}
 		}

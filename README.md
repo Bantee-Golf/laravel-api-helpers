@@ -311,6 +311,9 @@ If you don't want the test `tests/Feature/AutoGen/API/V1/MyTestAPI.php` to be cr
     - The actual HTTP response will be saved in `resources/docs/api_responses/auto_generated`
     - Run phpunit with `./vendor/bin/phpunit` and resolve the error first
 
+- Binary data on POST/PUT Requests
+
+Due to [Symfony and Laravel limitations](https://github.com/laravel/framework/issues/13457#issuecomment-239451567), you cannot send binary data (such as images) to a PUT endpoint. So either use a POST request with `_method=put` or don't use PUT requests with binary data.
 
 ## Contributing
 

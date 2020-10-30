@@ -59,6 +59,8 @@ class GenerateDocsTestsCommand extends Command
 		putenv('DOCUMENTATION_MODE=false');
 		$process = Process::fromShellCommandline(base_path('/vendor/bin/phpunit') . ' --filter AutoGen');
 		$process->run();
+		$process = Process::fromShellCommandline(base_path('/vendor/bin/phpunit') . ' --filter Manual');
+		$process->run();
 
 		if (!$process->isSuccessful()) {
 			$this->warn($process->getOutput());
