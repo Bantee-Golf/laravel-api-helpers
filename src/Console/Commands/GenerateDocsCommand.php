@@ -371,9 +371,9 @@ class GenerateDocsCommand extends Command
 
 				// if this is an array, skip it
 				// because it should be captured by the array's fields anyway
-				if ($dataType === 'Array') {
-					continue 1;
-				}
+				// if ($dataType === 'Array') {
+				// 	continue 1;
+				// }
 
 				// if the parameter contains a `.`, it's a data array
 				$name = '';
@@ -425,6 +425,11 @@ class GenerateDocsCommand extends Command
 						'type'        => strtolower($dataType),
 						// 'schema'      => [],
 					];
+
+					if ($paramData === Param::TYPE_ARRAY) {
+						$paramData['collectionFormat'] = $param->getCollectionFormat();
+						$paramData['items'] = $param->getItems();
+					}
 
 					// set the variable slots for postman
 					if ($type === 'postman') {

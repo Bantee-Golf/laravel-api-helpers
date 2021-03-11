@@ -25,6 +25,7 @@ class Param implements Arrayable, \JsonSerializable
 	public const TYPE_FLOAT  = 'number';
 	public const TYPE_DOUBLE = 'number';
 	public const TYPE_BOOLEAN = 'boolean';
+	public const TYPE_ARRAY = 'array';
 
 	protected $fieldName;
 	protected $required = true;
@@ -33,6 +34,8 @@ class Param implements Arrayable, \JsonSerializable
 	protected $description = '';
 	protected $location;
 	protected $model;
+	protected $collectionFormat;
+	protected $items;
 
 	protected $variable;
 	protected $example;
@@ -40,7 +43,7 @@ class Param implements Arrayable, \JsonSerializable
 	public function __construct($fieldName = null, $dataType = self::TYPE_STRING, $description = null, $location = null)
 	{
 		$this->fieldName = $fieldName;
-		$this->dataType = $dataType;
+		$this->setDataType($dataType);
 		$this->location = $location;
 		if (!$description && $fieldName) {
 			$this->description = ucfirst(Text::reverseSnake($fieldName));
@@ -68,6 +71,7 @@ class Param implements Arrayable, \JsonSerializable
 			self::TYPE_FLOAT,
 			self::TYPE_DOUBLE,
 			self::TYPE_BOOLEAN,
+			self::TYPE_ARRAY,
 		];
 	}
 
@@ -269,6 +273,8 @@ class Param implements Arrayable, \JsonSerializable
 			'model' => $this->model,
 			'variable' => $this->variable,
 			'example' => $this->example,
+			'collectionFormat' => $this->collectionFormat,
+			'items' => $this->items,
 		];
 	}
 
@@ -330,6 +336,12 @@ class Param implements Arrayable, \JsonSerializable
 	{
 		$this->dataType = $dataType;
 
+		// set the default array type
+		if ($dataType === self::TYPE_ARRAY) {
+			$this->setCollectionFormat('multi');
+			$this->setArrayType(self::TYPE_STRING);
+		}
+
 		return $this;
 	}
 
@@ -340,6 +352,53 @@ class Param implements Arrayable, \JsonSerializable
 	public function setDescription(?string $description): Param
 	{
 		$this->description = $description;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getCollectionFormat(): string
+	{
+		return $this->collectionFormat;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getItems()
+	{
+		return $this->items;
+	}
+
+	/**
+	 * @param string $collectionFormat
+	 *
+	 * @return Param
+	 */
+	public function setCollectionFormat(string $collectionFormat): Param
+	{
+		$this->collectionFormat = $collectionFormat;
+		return $this;
+	}
+
+	/**
+	 * @param mixed $items
+	 *
+	 * @return Param
+	 */
+	public function setItems($items)
+	{
+		$this->items = $items;
+		return $this;
+	}
+
+	public function setArrayType(string $dataType)
+	{
+		$this->items = [
+			'type' => $dataType,
+		];
+
 		return $this;
 	}
 }

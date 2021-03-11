@@ -173,6 +173,10 @@ public function register(Request $request)
                 (new Param('password', Param::TYPE_STRING,
                     'Password. Must be at least 6 characters.'))->setDefaultValue('123456'),
                 (new Param('password_confirmation'))->setDefaultValue('123456'),
+                
+                // set array parameters
+				(new Param('staff_id', 'array', 'An array of IDs of staff'))
+					->setArrayType(ParamType::STRING),
             ])
             ->setApiKeyHeader()
             ->setSuccessObject(\App\User::class)
