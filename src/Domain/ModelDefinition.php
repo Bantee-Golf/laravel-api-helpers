@@ -54,7 +54,10 @@ class ModelDefinition
 			'properties' => [
 				'current_page' => [ 'type' => 'number' ],
 				'per_page'  => [ 'type' => 'number', 'default' => 50 ],
+				'from' => [ 'type' => 'number' ],
 				'to' => [ 'type' => 'number' ],
+				'total' => [ 'type' => 'number' ],
+				'last_page' => [ 'type' => 'number' ],
 			],
 		];
 
