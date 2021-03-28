@@ -38,7 +38,7 @@ class ManualTestOverridesAllowedTest extends \EMedia\Api\Tests\TestCase
 
 		Route::get('/api/v1/manualOverride', '\App\Controllers\Http\TestController@manualOverride');
 
-		$this->artisan("generate:docs --test-user-id=".self::getTestUserId());
+		$this->artisan("generate:docs --no-authenticate-web-apis --test-user-id=".self::getTestUserId());
 		$this->artisan("generate:api-tests --force");
 
 		// auto-gen test must not be generated, because there's a manual file

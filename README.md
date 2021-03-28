@@ -37,6 +37,7 @@ composer require emedia/api
 
 On your `.env` and `.env.example` files, add these values
 ```
+APP_ENV=testing
 APP_SANDBOX_URL=https://sandbox-project-url.preview.cx
 APP_SANDBOX_API_KEY="123-123-123-123"
 API_SAVE_TEST_RESPONSES=true
@@ -116,7 +117,7 @@ Returns (Unprocessable Entity - 422 by default)
 
 ## Documentation Builder
 
-To allow auto-generation of docs, you need to call the `document()` function immidiately after the functions.
+To allow auto-generation of docs, you need to call the `document()` function immediately after the functions.
 
 For example, look at the `register()` method in `AuthController` below.
 
@@ -316,6 +317,10 @@ If you don't want the test `tests/Feature/AutoGen/API/V1/MyTestAPI.php` to be cr
     - Run phpunit with `./vendor/bin/phpunit` and resolve the error first
 
 - Binary data on POST/PUT Requests
+
+- CSRF validation error. If your API routes have CSRF protection, switch your `ÀPP_ENV` to `APP_ENV=testing` to disable CSRF validation for API doc generation.
+
+- Apidoc will attempt to log in as a user before hitting the API endpoints to document. If you need these routes to be called as a non-logged in user use `php artisan generate:docs --no-authenticate-web-apis`.
 
 Due to [Symfony and Laravel limitations](https://github.com/laravel/framework/issues/13457#issuecomment-239451567), you cannot send binary data (such as images) to a PUT endpoint. So either use a POST request with `_method=put` or don't use PUT requests with binary data.
 

@@ -21,6 +21,7 @@ class GenerateDocsTestsCommand extends Command
 	protected $signature = 'generate:docs-tests
 								{--login-user-id=3 : User ID to access login of API}
 								{--login-user-pass=12345678 : Password for the Login User}
+								{--no-authenticate-web-apis : Do not log in with "login-user-id" (web route) before generating the API docs. }
 								{--test-user-id=4 : User ID of the test user}
 								{--no-apidoc : Do not run api docs}
 								{--force-tests=false : Overwrite test files}
@@ -39,6 +40,7 @@ class GenerateDocsTestsCommand extends Command
 		$this->call('generate:docs', [
 			'--login-user-id' => $this->option('login-user-id'),
 			'--login-user-pass' => $this->option('login-user-pass'),
+			'--no-authenticate-web-apis' => $this->option('no-authenticate-web-apis'),
 			'--test-user-id' => $this->option('test-user-id'),
 
 			// don't need apidocs on first pass
@@ -72,6 +74,7 @@ class GenerateDocsTestsCommand extends Command
 				'--reset' => true,
 				'--login-user-id' => $this->option('login-user-id'),
 				'--login-user-pass' => $this->option('login-user-pass'),
+				'--no-authenticate-web-apis' => $this->option('no-authenticate-web-apis'),
 				'--test-user-id' => $this->option('test-user-id'),
 			]);
 		}

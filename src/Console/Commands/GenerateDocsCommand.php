@@ -26,6 +26,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -42,6 +43,7 @@ class GenerateDocsCommand extends Command
 	protected $signature = 'generate:docs
 								{--login-user-id=3 : User ID to access login of API}
 								{--login-user-pass=12345678 : Password for the Login User}
+								{--no-authenticate-web-apis : Do not log in with "login-user-id" (web route) before generating the API docs. }
 								{--test-user-id=4 : User ID of the test user}
 								{--no-apidoc : Do not run api docs}
 								{--no-files-output : Do not show generated files}
@@ -231,6 +233,11 @@ class GenerateDocsCommand extends Command
 			if (strpos($route->uri(), 'api') === 0) {
 				$apiRoutes->push($route);
 			}
+		}
+
+		// unless disabled, login as a user before hitting any routes
+		if (!$this->option('no-authenticate-web-apis')) {
+			Auth::loginUsingId($this->option('login-user-id'));
 		}
 
 		foreach ($apiRoutes as $route) {
@@ -590,7 +597,7 @@ class GenerateDocsCommand extends Command
 		$postmanEnvironment->addVariable('test_user_email', $this->testUser->email);
 
 		// Generate Local Environment Config
-		if ($this->getenv('APP_ENV') === 'local') {
+		if ($this->getenv('APP_ENV') === 'local' || $this->getenv('APP_ENV') === 'testing') {
 			$filePath = $this->docsFolder . DIRECTORY_SEPARATOR . 'postman_environment_local.json';
 			$postmanEnvironment->setName(sprintf("%s Environment (LOCAL)", config('app.name')));
 			$postmanEnvironment->setServerUrl($this->getenv('APP_URL'));
