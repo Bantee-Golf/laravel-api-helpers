@@ -32,7 +32,7 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 
 		$this->mockDataSources($testUserId);
 
-		$this->artisan("generate:docs --test-user-id={$testUserId}");
+		$this->artisan("generate:docs --no-authenticate-web-apis --test-user-id={$testUserId}");
 
 		$this->expectsConsoleOutput([
 			'does not have an API documented',
@@ -51,7 +51,7 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 		$this->mockDataSources($testUserId);
 
 		$this->setApiKey();
-		$this->artisan("generate:docs --test-user-id={$testUserId}");
+		$this->artisan("generate:docs --no-authenticate-web-apis --test-user-id={$testUserId}");
 
 		$this->expectsNotInConsoleOutput([
 			'API_KEY not found'
@@ -82,7 +82,7 @@ class RouteDocumentRegistrationTest extends \EMedia\Api\Tests\TestCase
 		$this->mockDataSources($testUserId);
 
 		$this->setApiKey();
-		$this->artisan("generate:docs --test-user-id={$testUserId}");
+		$this->artisan("generate:docs --no-authenticate-web-apis --test-user-id={$testUserId}");
 
 		$this->expectsNotInConsoleOutput([
 			'does not have an API documented',
