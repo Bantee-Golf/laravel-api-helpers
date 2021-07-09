@@ -9,7 +9,7 @@ This package adds the following.
 - Postman collections
 - Postman environments
 
-[Watch the Demo Video Here](https://www.dropbox.com/s/76xjohym9s3io5k/20200729-API%20Generation%20Demo.mp4?dl=0)
+[Watch the Demo Video Here](https://www.dropbox.com/s/f2gi684aidiycbj/20200729-API%20Generation%20Demo.mp4?dl=0)
 
 ### Version Compatibility
 
