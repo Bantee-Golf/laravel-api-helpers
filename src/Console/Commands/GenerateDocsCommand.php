@@ -433,7 +433,7 @@ class GenerateDocsCommand extends Command
 						// 'schema'      => [],
 					];
 
-					if ($paramData === Param::TYPE_ARRAY) {
+					if ($paramData['type'] === Param::TYPE_ARRAY) {
 						$paramData['collectionFormat'] = $param->getCollectionFormat();
 						$paramData['items'] = $param->getItems();
 					}
