@@ -10,7 +10,9 @@ if (!function_exists('document')) {
 	 */
 	function document(Closure $closure)
 	{
-		if (!env('DOCUMENTATION_MODE', false)) return;
+		if (!env('DOCUMENTATION_MODE', false)) {
+			return;
+		}
 
 		$apiRequest = $closure();
 

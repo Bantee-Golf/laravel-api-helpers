@@ -1,19 +1,22 @@
 <?php
 
-
 namespace EMedia\Api\Docs;
-
 
 use EMedia\Api\Exceptions\DocumentationModeEnabledException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class DocBuilder
 {
-
 	protected $apiCalls;
 	protected $attributes = [];
 
 	public function __construct()
+	{
+		$this->apiCalls = new Collection();
+	}
+
+	public function reset()
 	{
 		$this->apiCalls = new Collection();
 	}
@@ -37,7 +40,7 @@ class DocBuilder
 		if (!empty($define)) {
 			$group = $apiCall->getGroup();
 			if (empty($group)) {
-				$apiCall->setGroup(snake_case($define['title']));
+				$apiCall->setGroup(Str::snake($define['title']));
 			}
 			$this->apiCalls->push($apiCall);
 			return;
@@ -82,7 +85,7 @@ class DocBuilder
 		// try to set a default name
 		$name = $apiCall->getName();
 		if (empty($name)) {
-			$singularGroup = str_singular($group);
+			$singularGroup = Str::singular($group);
 			$method = strtolower($apiCall->getMethod());
 			switch ($method) {
 				case 'post':
@@ -110,7 +113,9 @@ class DocBuilder
 					break;
 			}
 
-			if (empty($newName)) $newName = '<UNKNOWN NAME>';
+			if (empty($newName)) {
+				$newName = '<UNKNOWN NAME>';
+			}
 			$apiCall->setName($newName);
 		}
 
@@ -160,5 +165,4 @@ class DocBuilder
 	{
 		throw new DocumentationModeEnabledException("Requests cannot be executed while in documentation mode.");
 	}
-
 }

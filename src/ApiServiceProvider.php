@@ -1,7 +1,9 @@
 <?php
 namespace EMedia\Api;
 
+use EMedia\Api\Console\Commands\GenerateDocsTestsCommand;
 use EMedia\Api\Console\Commands\GenerateDocsCommand;
+use EMedia\Api\Console\Commands\GenerateApiTestsCommand;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +23,8 @@ class ApiServiceProvider extends ServiceProvider
 			$this->app->singleton('emedia.api.builder', \EMedia\Api\Docs\DocBuilder::class);
 
 			$this->commands(GenerateDocsCommand::class);
+			$this->commands(GenerateDocsTestsCommand::class);
+			$this->commands(GenerateApiTestsCommand::class);
 		}
 
 		$this->registerCustomResponses();
@@ -40,7 +44,9 @@ class ApiServiceProvider extends ServiceProvider
 
 		Response::macro('apiSuccessPaginated', function (Paginator $paginator, $message = '', $customData = []) {
 			$paginatorArray = $paginator->toArray();
-			if (isset($paginatorArray['data'])) unset($paginatorArray['data']);
+			if (isset($paginatorArray['data'])) {
+				unset($paginatorArray['data']);
+			}
 
 			return Response::json(array_merge($customData, [
 				'payload' => $paginator->items(),
@@ -55,13 +61,14 @@ class ApiServiceProvider extends ServiceProvider
 		//
 
 		// unauthorized
-		Response::macro('apiErrorUnauthorized', function ($message = 'Authentication failed. Try to login again.') {
+		Response::macro('apiErrorUnauthorized', function ($message = 'Authentication failed. Try to login again.', $responseCode = BaseResponse::HTTP_UNAUTHORIZED) {
 			return Response::json([
 				'message' => $message,
 				'payload' => null,
 				'result'  => false,
-			], BaseResponse::HTTP_UNAUTHORIZED); // 401 Error
+			], $responseCode); // 401 Error
 		});
+
 
 		// Generic API authorization error
 		Response::macro('apiErrorAccessDenied', function ($message = 'Access denied.') {
@@ -73,19 +80,19 @@ class ApiServiceProvider extends ServiceProvider
 		});
 
 		// Generic error
-		Response::macro('apiError',
-			function ($message = 'Unable to process request. Please try again later.',
+		Response::macro(
+			'apiError',
+			function (
+				$message = 'Unable to process request. Please try again later.',
 				$payload = null,
-				$statusCode = BaseResponse::HTTP_UNPROCESSABLE_ENTITY) {
-
+				$statusCode = BaseResponse::HTTP_UNPROCESSABLE_ENTITY
+			) {
 				return Response::json([
 					'message' => $message,
 					'payload' => $payload,
 					'result'  => false,
 				], $statusCode);
-
-			});
+			}
+		);
 	}
-
-
 }

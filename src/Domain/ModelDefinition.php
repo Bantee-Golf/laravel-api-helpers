@@ -3,15 +3,12 @@
 
 namespace EMedia\Api\Domain;
 
-
+use ElegantMedia\PHPToolkit\Loader;
 use EMedia\Api\Docs\Param;
-use EMedia\PHPHelpers\Files\Loader;
 use Illuminate\Database\Eloquent\Model;
 
 class ModelDefinition
 {
-
-
 	/**
 	 *
 	 * Get all model definitions
@@ -21,7 +18,9 @@ class ModelDefinition
 	 */
 	public function getAllModelDefinitions()
 	{
-		if (!config('oxygen.api.includeModelDefinitions', false)) return [];
+		if (!config('oxygen.api.includeModelDefinitions', false)) {
+			return [];
+		}
 
 		$models = $this->getAllModels();
 
@@ -30,8 +29,15 @@ class ModelDefinition
 		$definitions = [];
 		foreach ($models as $model) {
 			$definition = $this->getModelDefinition($model);
+
+			// if hidden, don't include them
 			if (!in_array($definition['name'], $hiddenModelDefinitions)) {
-				$definitions[$definition['name']] = $definition['definition'];
+				// if already included, don't include them
+				// this will prioritise the models in local project first
+				// and ignore any inherited ones if found.
+				if (!isset($definitions[$definition['name']])) {
+					$definitions[$definition['name']] = $definition['definition'];
+				}
 			}
 		}
 
@@ -48,7 +54,10 @@ class ModelDefinition
 			'properties' => [
 				'current_page' => [ 'type' => 'number' ],
 				'per_page'  => [ 'type' => 'number', 'default' => 50 ],
+				'from' => [ 'type' => 'number' ],
 				'to' => [ 'type' => 'number' ],
+				'total' => [ 'type' => 'number' ],
+				'last_page' => [ 'type' => 'number' ],
 			],
 		];
 
@@ -194,6 +203,13 @@ class ModelDefinition
 			$schema = $model->getConnection()->getDoctrineSchemaManager($table);
 			$databasePlatform = $schema->getDatabasePlatform();
 			$databasePlatform->registerDoctrineTypeMapping('enum', 'string');
+
+			if (!empty(config('database.doctrine_type_maps'))) {
+				foreach (config('database.doctrine_type_maps') as $type => $map) {
+					$databasePlatform->registerDoctrineTypeMapping($type, $map);
+				}
+			}
+
 			$database = null;
 			if (strpos($table, '.')) {
 				list($database, $table) = explode('.', $table);
@@ -203,7 +219,6 @@ class ModelDefinition
 			return null;
 		}
 	}
-
 
 	/**
 	 *
@@ -268,18 +283,40 @@ class ModelDefinition
 		foreach ($filteredFields as $key => $value) {
 			if (is_array($value) && isset($value['type'])) {
 				if ($value['type'] == 'array' && isset($value['items'])) {
-					$properties[$key] = [
-						'type' => $value['type'],
-						'items' => [
-							"\$ref" => "#/definitions/" . $value['items'],
-						],
-					];
-				} else if ($value['type'] == 'object' && isset($value['items'])) {
+					if (is_array($value['items'])) {
+						$properties[$key] = [
+							'type' => $value['type'],
+							'items' => [
+								"type" => $value['items']['type'],
+							],
+						];
+
+						if (isset($value['items']['format'])) {
+							$properties[$key]['items']['format'] = $value['items']['format'];
+						}
+					} else {
+						$properties[$key] = [
+							'type' => $value['type'],
+							'items' => [
+								"\$ref" => "#/definitions/" . $value['items'],
+							],
+						];
+					}
+				} elseif ($value['type'] == 'object' && isset($value['items'])) {
 					$properties[$key] = [
 						"\$ref" => "#/definitions/" . $value['items'],
 					];
 				} else {
-					$properties[$key] = ['type' => $value['type']];
+					if (isset($value['format'])) {
+						$properties[$key] = [
+							'type' => $value['type'],
+							'format' => $value['format']
+						];
+					} else {
+						$properties[$key] = [
+							'type' => $value['type'],
+						];
+					}
 				}
 			} else {
 				$properties[$key] = ['type' => $value];
@@ -288,13 +325,19 @@ class ModelDefinition
 
 		$reflect = new \ReflectionClass($class);
 
-		return [
+		$response = [
 			'name' => $reflect->getShortName(),
 			'definition' => [
 				'type' => 'object',
-				'properties' => $properties,
 			],
 		];
+
+		// empty properties are not allowed
+		if (count($properties) > 0) {
+			$response['definition']['properties'] = $properties;
+		}
+
+		return $response;
 	}
 
 
@@ -304,6 +347,4 @@ class ModelDefinition
 
 		return $reflect->getShortName();
 	}
-
-
 }

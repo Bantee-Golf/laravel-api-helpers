@@ -1,0 +1,15 @@
+image: emediaorg/php:0.0.1
+
+pipelines:
+    default:
+        - step:
+              caches:
+                  - composer
+                  - node
+              script:
+                  - npm install -g apidoc
+                  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+                  - composer update --no-interaction
+                  - composer global require friendsofphp/php-cs-fixer
+                  - export PATH="$PATH:$HOME/.composer/vendor/bin"
+                  - vendor/bin/phpunit
