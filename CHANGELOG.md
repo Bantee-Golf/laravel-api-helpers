@@ -7,7 +7,7 @@ Use versions as below.
 | Laravel Version | Api Helpers Version      | Branch         |
 | --------------- |:------------------------:|:--------------:|
 | v9              | 5.x                      | master         |  
-| v8              | 4.x                      | version/v4.x   |  
+| v8              | 4.x                      | 4.x			  |  
 | v7              | 3.1.x                    | version/v3.x   |
 | v6              | 3.0.x                    |                |
 | v5.7            | 2.1.x                    |                |  
