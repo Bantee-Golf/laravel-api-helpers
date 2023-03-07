@@ -1,4 +1,4 @@
-image: emediaorg/php:8.1.0
+image: emediaorg/php:8.1-202303
 
 pipelines:
     default:
