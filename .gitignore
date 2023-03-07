@@ -7,3 +7,5 @@ phpunit.xml
 .phpunit.result.cache
 .php_cs.cache
 LOCAL.md
+.phpunit.cache/
+.php-cs-fixer.cache
