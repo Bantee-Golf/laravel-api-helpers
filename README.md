@@ -13,12 +13,10 @@ This package adds the following.
 
 ### Version Compatibility
 
-| Laravel Version | Api Helpers Version |    Branch    |
-|-----------------|:-------------------:|:------------:|
-| v10             |         6.x         |    master    |
-| v9              |         5.x         |     5.x      |  
-| v8              |         4.x         |    4.x			    |  
-| v7              |        3.1.x        | version/v3.x |
+| Laravel Version | Api Helpers Version      | Branch         |
+| --------------- |:------------------------:|:--------------:|
+| v8              | 4.x                      | master         |  
+| v7              | 3.1.x                    | version/v3.x   |
 
 See [CHANGELOG](CHANGELOG.md) for past versions.
 
@@ -331,4 +329,4 @@ Due to [Symfony and Laravel limitations](https://github.com/laravel/framework/is
 - Found a bug? Report as an issue and submit a pull request.
 - Please see [CONTRIBUTING](CONTRIBUTING.md) and for details.
 
-Copyright (c) Elegant Media.
+Copyright (c) 2020 Elegant Media.
