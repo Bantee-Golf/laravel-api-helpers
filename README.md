@@ -15,7 +15,8 @@ This package adds the following.
 
 | Laravel Version | Api Helpers Version      | Branch         |
 | --------------- |:------------------------:|:--------------:|
-| v8              | 4.x                      | master         |  
+| v9              | 5.x                      | master         |  
+| v8              | 4.x                      | 4.x			  |  
 | v7              | 3.1.x                    | version/v3.x   |
 
 See [CHANGELOG](CHANGELOG.md) for past versions.

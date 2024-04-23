@@ -6,10 +6,15 @@ Use versions as below.
 
 | Laravel Version | Api Helpers Version      | Branch         |
 | --------------- |:------------------------:|:--------------:|
-| v8              | 4.x                      | master         |  
+| v9              | 5.x                      | master         |  
+| v8              | 4.x                      | 4.x			  |  
 | v7              | 3.1.x                    | version/v3.x   |
 | v6              | 3.0.x                    |                |
 | v5.7            | 2.1.x                    |                |  
+
+## v5.0.0
+- Laravel 9 Support
+- Drop Php 7 Support
 
 ## v4.0.0
 - Laravel 8 Support
